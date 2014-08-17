@@ -18,7 +18,10 @@ namespace Sws.Threading.Reflection
         public IEnumerable<MethodInfo> ExtractMethods<TDeclaring>(Predicate<MemberInfo> memberSelector)
         {
             return ExtractMethods<TDeclaring>(
-                typeof(TDeclaring).GetMembers().Where(memberInfo => memberSelector(memberInfo)).ToArray());
+                typeof(TDeclaring)
+                    .GetMembers(BindingFlags.Public | BindingFlags.Instance)
+                    .Where(memberInfo => memberSelector(memberInfo))
+                .ToArray());
         }
 
         public IEnumerable<MethodInfo> ExtractMethods<TDeclaring>(MemberInfo[] memberInfos)
