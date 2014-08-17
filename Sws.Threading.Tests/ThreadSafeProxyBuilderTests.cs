@@ -217,7 +217,7 @@ namespace Sws.Threading.Tests
 
             int lockEntryCount = 0;
 
-            testMock.Setup(test => test.SomeProperty).Callback(() => lockEntryCountDuringCallback = lockEntryCount);
+            testMock.SetupGet(test => test.SomeProperty).Callback(() => lockEntryCountDuringCallback = lockEntryCount);
 
             Func<object, ILock> lockFactory = obj =>
             {
@@ -247,7 +247,7 @@ namespace Sws.Threading.Tests
 
             int lockEntryCount = 0;
 
-            testMock.Setup(test => test.SomeProperty).Callback(() => lockEntryCountDuringCallback = lockEntryCount);
+            testMock.SetupGet(test => test.SomeProperty).Callback(() => lockEntryCountDuringCallback = lockEntryCount);
 
             Func<object, ILock> lockFactory = obj =>
             {
@@ -277,7 +277,7 @@ namespace Sws.Threading.Tests
 
             int lockEntryCount = 0;
 
-            testMock.Setup(test => test.SomeProperty).Callback(() => lockEntryCountDuringCallback = lockEntryCount);
+            testMock.SetupGet(test => test.SomeProperty).Callback(() => lockEntryCountDuringCallback = lockEntryCount);
 
             Func<object, ILock> lockFactory = obj =>
             {
@@ -307,7 +307,7 @@ namespace Sws.Threading.Tests
 
             int lockEntryCount = 0;
 
-            testMock.Setup(test => test.SomeProperty).Callback(() => lockEntryCountDuringCallback = lockEntryCount);
+            testMock.SetupGet(test => test.SomeProperty).Callback(() => lockEntryCountDuringCallback = lockEntryCount);
 
             Func<object, ILock> lockFactory = obj =>
             {
@@ -339,7 +339,7 @@ namespace Sws.Threading.Tests
 
             int lockEntryCount = 0;
 
-            testMock.Setup(test => test.SomeProperty).Callback(() => lockEntryCountDuringCallback = lockEntryCount);
+            testMock.SetupGet(test => test.SomeProperty).Callback(() => lockEntryCountDuringCallback = lockEntryCount);
 
             Func<object, ILock> lockFactory = obj =>
             {
@@ -370,7 +370,7 @@ namespace Sws.Threading.Tests
 
             int lockEntryCount = 0;
 
-            testMock.Setup(test => test.SomeProperty).Callback(() => lockEntryCountDuringCallback = lockEntryCount);
+            testMock.SetupGet(test => test.SomeProperty).Callback(() => lockEntryCountDuringCallback = lockEntryCount);
 
             Func<object, ILock> lockFactory = obj =>
             {
@@ -401,7 +401,7 @@ namespace Sws.Threading.Tests
 
             int lockEntryCount = 0;
 
-            testMock.Setup(test => test.SomeProperty).Callback(() => lockEntryCountDuringCallback = lockEntryCount);
+            testMock.SetupGet(test => test.SomeProperty).Callback(() => lockEntryCountDuringCallback = lockEntryCount);
 
             Func<object, ILock> lockFactory = obj =>
             {
@@ -432,7 +432,7 @@ namespace Sws.Threading.Tests
 
             int lockEntryCount = 0;
 
-            testMock.Setup(test => test.SomeProperty).Callback(() => lockEntryCountDuringCallback = lockEntryCount);
+            testMock.SetupGet(test => test.SomeProperty).Callback(() => lockEntryCountDuringCallback = lockEntryCount);
 
             Func<object, ILock> lockFactory = obj =>
             {
@@ -462,7 +462,7 @@ namespace Sws.Threading.Tests
 
             int lockEntryCount = 0;
 
-            testMock.Setup(test => test.SomeProperty).Callback(() => lockEntryCountDuringCallback = lockEntryCount);
+            testMock.SetupGet(test => test.SomeProperty).Callback(() => lockEntryCountDuringCallback = lockEntryCount);
 
             Func<object, ILock> lockFactory = obj =>
             {
@@ -491,6 +491,126 @@ namespace Sws.Threading.Tests
             lockEntryCountDuringCallback1.Should().Be(0);
 
             lockEntryCountDuringCallback2.Should().Be(1);
+        }
+
+        [TestMethod]
+        public void ThreadSafeProxyNotInLockOnReadWhenInterfaceMemberSpecifiedInForSetterLambdaExpression()
+        {
+            var testMock = new Mock<ITest>();
+
+            int? lockEntryCountDuringCallback = null;
+
+            int lockEntryCount = 0;
+
+            testMock.SetupGet(test => test.SomeProperty).Callback(() => lockEntryCountDuringCallback = lockEntryCount);
+
+            Func<object, ILock> lockFactory = obj =>
+            {
+                var lockMock = new Mock<ILock>();
+
+                lockMock.Setup(lck => lck.Enter()).Callback(() => lockEntryCount++);
+                lockMock.Setup(lck => lck.Exit()).Callback(() => lockEntryCount--);
+
+                return lockMock.Object;
+            };
+
+            var proxyBuilder = CreateThreadSafeProxyBuilder(testMock.Object, lockFactory);
+
+            var proxy = proxyBuilder.ForSetter(test => test.SomeProperty).Build();
+
+            var propertyValue = proxy.SomeProperty;
+
+            lockEntryCountDuringCallback.Should().Be(0);
+        }
+
+        [TestMethod]
+        public void ThreadSafeProxyInLockOnReadWhenInterfaceMemberSpecifiedInForGetterLambdaExpression()
+        {
+            var testMock = new Mock<ITest>();
+
+            int? lockEntryCountDuringCallback = null;
+
+            int lockEntryCount = 0;
+
+            testMock.SetupGet(test => test.SomeProperty).Callback(() => lockEntryCountDuringCallback = lockEntryCount);
+
+            Func<object, ILock> lockFactory = obj =>
+            {
+                var lockMock = new Mock<ILock>();
+
+                lockMock.Setup(lck => lck.Enter()).Callback(() => lockEntryCount++);
+                lockMock.Setup(lck => lck.Exit()).Callback(() => lockEntryCount--);
+
+                return lockMock.Object;
+            };
+
+            var proxyBuilder = CreateThreadSafeProxyBuilder(testMock.Object, lockFactory);
+
+            var proxy = proxyBuilder.ForGetter(test => test.SomeProperty).Build();
+
+            var propertyValue = proxy.SomeProperty;
+
+            lockEntryCountDuringCallback.Should().Be(1);
+        }
+
+        [TestMethod]
+        public void ThreadSafeProxyNotInLockOnWriteWhenInterfaceMemberSpecifiedInForGetterLambdaExpression()
+        {
+            var testMock = new Mock<ITest>();
+
+            int? lockEntryCountDuringCallback = null;
+
+            int lockEntryCount = 0;
+
+            testMock.SetupSet(test => test.SomeProperty = It.IsAny<bool>()).Callback(() => lockEntryCountDuringCallback = lockEntryCount);
+
+            Func<object, ILock> lockFactory = obj =>
+            {
+                var lockMock = new Mock<ILock>();
+
+                lockMock.Setup(lck => lck.Enter()).Callback(() => lockEntryCount++);
+                lockMock.Setup(lck => lck.Exit()).Callback(() => lockEntryCount--);
+
+                return lockMock.Object;
+            };
+
+            var proxyBuilder = CreateThreadSafeProxyBuilder(testMock.Object, lockFactory);
+
+            var proxy = proxyBuilder.ForGetter(test => test.SomeProperty).Build();
+
+            proxy.SomeProperty = true;
+
+            lockEntryCountDuringCallback.Should().Be(0);
+        }
+
+        [TestMethod]
+        public void ThreadSafeProxyInLockOnWriteWhenInterfaceMemberSpecifiedInForSetterLambdaExpression()
+        {
+            var testMock = new Mock<ITest>();
+
+            int? lockEntryCountDuringCallback = null;
+
+            int lockEntryCount = 0;
+
+            testMock.SetupSet(test => test.SomeProperty = It.IsAny<bool>()).Callback(() => lockEntryCountDuringCallback = lockEntryCount);
+
+            Func<object, ILock> lockFactory = obj =>
+            {
+                var lockMock = new Mock<ILock>();
+
+                lockMock.Setup(lck => lck.Enter()).Callback(() => lockEntryCount++);
+                lockMock.Setup(lck => lck.Exit()).Callback(() => lockEntryCount--);
+
+                return lockMock.Object;
+            };
+
+            var proxyBuilder = CreateThreadSafeProxyBuilder(testMock.Object, lockFactory);
+
+            var proxy = proxyBuilder.ForSetter(test => test.SomeProperty).Build();
+
+            proxy.SomeProperty = true;
+
+            lockEntryCountDuringCallback.Should().Be(1);
         }
 
     }

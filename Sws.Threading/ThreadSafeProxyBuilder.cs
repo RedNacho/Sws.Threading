@@ -67,6 +67,38 @@ namespace Sws.Threading
         }
 
         /// <summary>
+        /// Specifies that the TProxy setter described by the expression will be made thread-safe.
+        /// </summary>
+        /// <param name="memberExpression"></param>
+        /// <returns></returns>
+
+        public ThreadSafeProxyBuilder<TProxy> ForSetter<TReturn>(Expression<Func<TProxy, TReturn>> memberExpression)
+        {
+            if (memberExpression == null)
+            {
+                throw new ArgumentNullException("memberExpression");
+            }
+
+            return ForMethods(_methodInfoExtractor.ExtractSetters<TProxy>(memberExpression));
+        }
+
+        /// <summary>
+        /// Specifies that the TProxy getter described by the expression will be made thread-safe.
+        /// </summary>
+        /// <param name="memberExpression"></param>
+        /// <returns></returns>
+
+        public ThreadSafeProxyBuilder<TProxy> ForGetter<TReturn>(Expression<Func<TProxy, TReturn>> memberExpression)
+        {
+            if (memberExpression == null)
+            {
+                throw new ArgumentNullException("memberExpression");
+            }
+
+            return ForMethods(_methodInfoExtractor.ExtractGetters<TProxy>(memberExpression));
+        }
+
+        /// <summary>
         /// Specifies that the TProxy member described by the expression will be made thread-safe.
         /// </summary>
         /// <param name="memberExpression"></param>

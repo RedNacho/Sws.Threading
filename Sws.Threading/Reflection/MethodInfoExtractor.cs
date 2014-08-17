@@ -15,6 +15,16 @@ namespace Sws.Threading.Reflection
             return ExtractMethods<TDeclaring>(ExtractMembers<TDeclaring>(memberExpression).ToArray());
         }
 
+        public IEnumerable<MethodInfo> ExtractSetters<TDeclaring>(Expression memberExpression)
+        {
+            return ExtractSetters<TDeclaring>(ExtractMembers<TDeclaring>(memberExpression).ToArray());
+        }
+
+        public IEnumerable<MethodInfo> ExtractGetters<TDeclaring>(Expression memberExpression)
+        {
+            return ExtractGetters<TDeclaring>(ExtractMembers<TDeclaring>(memberExpression).ToArray());
+        }
+
         public IEnumerable<MethodInfo> ExtractMethods<TDeclaring>(Predicate<MemberInfo> memberSelector)
         {
             return ExtractMethods<TDeclaring>(
@@ -24,19 +34,43 @@ namespace Sws.Threading.Reflection
                 .ToArray());
         }
 
-        public IEnumerable<MethodInfo> ExtractMethods<TDeclaring>(MemberInfo[] memberInfos)
+        private IEnumerable<MethodInfo> ExtractGetters<TDeclaring>(MemberInfo[] memberInfos)
         {
-            return GetMethods(memberInfos)
-                .Union(GetGettersAndSetters(GetProperties(memberInfos)))
-                .Where(methodInfo => methodInfo.DeclaringType == typeof(TDeclaring))
-                .Distinct();
+            return FilterMethodsForDeclaringType<TDeclaring>(GetGetters(GetProperties(memberInfos)));
         }
 
-        public IEnumerable<MethodInfo> GetGettersAndSetters(IEnumerable<PropertyInfo> propertyInfos)
+        private IEnumerable<MethodInfo> ExtractSetters<TDeclaring>(MemberInfo[] memberInfos)
         {
-            return propertyInfos.Select(propertyInfo => new[] { propertyInfo.GetGetMethod(), propertyInfo.GetSetMethod() })
-                .SelectMany(propertyGetSetMethods => propertyGetSetMethods)
-                .Where(propertyGetSetMethod => propertyGetSetMethod != null);
+            return FilterMethodsForDeclaringType<TDeclaring>(GetSetters(GetProperties(memberInfos)));
+        }
+
+        public IEnumerable<MethodInfo> ExtractMethods<TDeclaring>(MemberInfo[] memberInfos)
+        {
+            return FilterMethodsForDeclaringType<TDeclaring>(GetMethods(memberInfos)
+                .Union(GetGettersAndSetters(GetProperties(memberInfos)))
+                .Distinct());
+        }
+
+        private IEnumerable<MethodInfo> FilterMethodsForDeclaringType<TDeclaring>(IEnumerable<MethodInfo> methodInfos)
+        {
+            return methodInfos.Where(methodInfo => methodInfo.DeclaringType == typeof(TDeclaring));
+        }
+
+        private IEnumerable<MethodInfo> GetGettersAndSetters(IEnumerable<PropertyInfo> propertyInfos)
+        {
+            return GetGetters(propertyInfos).Union(GetSetters(propertyInfos));
+        }
+
+        private IEnumerable<MethodInfo> GetGetters(IEnumerable<PropertyInfo> propertyInfos)
+        {
+            return propertyInfos.Select(propertyInfo => propertyInfo.GetGetMethod())
+                .Where(propertyGetMethod => propertyGetMethod != null);
+        }
+
+        private IEnumerable<MethodInfo> GetSetters(IEnumerable<PropertyInfo> propertyInfos)
+        {
+            return propertyInfos.Select(propertyInfo => propertyInfo.GetSetMethod())
+                .Where(propertySetMethod => propertySetMethod != null);
         }
 
         private IEnumerable<PropertyInfo> GetProperties(IEnumerable<MemberInfo> memberInfos)
