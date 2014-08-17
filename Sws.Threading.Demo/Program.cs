@@ -77,7 +77,7 @@ namespace Sws.Threading.Demo
 
             Console.WriteLine("Testing with safe counter (GetAndIncrement not threadsafed, should have problems...)");
 
-            safeCounter = unsafeCounter.ConfigureThreadSafeProxy().ExceptForMember(counter => counter.GetAndIncrement()).Build();
+            safeCounter = unsafeCounter.ConfigureThreadSafeProxy().Except().ForMember(counter => counter.GetAndIncrement()).Build();
 
             TestCounter(safeCounter);
 

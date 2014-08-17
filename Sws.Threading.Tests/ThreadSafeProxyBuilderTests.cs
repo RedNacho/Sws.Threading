@@ -231,7 +231,7 @@ namespace Sws.Threading.Tests
 
             var proxyBuilder = CreateThreadSafeProxyBuilder(testMock.Object, lockFactory);
 
-            var proxy = proxyBuilder.ExceptForMember(test => test.SomeProperty).Build();
+            var proxy = proxyBuilder.Except().ForMember(test => test.SomeProperty).Build();
 
             var propertyValue = proxy.SomeProperty;
 
@@ -261,7 +261,7 @@ namespace Sws.Threading.Tests
 
             var proxyBuilder = CreateThreadSafeProxyBuilder(testMock.Object, lockFactory);
 
-            var proxy = proxyBuilder.ExceptForMembers().Build();
+            var proxy = proxyBuilder.Except().ForMembers().Build();
 
             var propertyValue = proxy.SomeProperty;
 
@@ -384,7 +384,7 @@ namespace Sws.Threading.Tests
 
             var proxyBuilder = CreateThreadSafeProxyBuilder(testMock.Object, lockFactory);
 
-            var proxy = proxyBuilder.ExceptForMembers(memberInfo => memberInfo.Name == "SomeProperty").Build();
+            var proxy = proxyBuilder.Except().ForMembers(memberInfo => memberInfo.Name == "SomeProperty").Build();
 
             var propertyValue = proxy.SomeProperty;
 
@@ -446,7 +446,7 @@ namespace Sws.Threading.Tests
 
             var proxyBuilder = CreateThreadSafeProxyBuilder(testMock.Object, lockFactory);
 
-            var proxy = proxyBuilder.ExceptForMembers(memberInfo => memberInfo.Name == "SomeOtherProperty").Build();
+            var proxy = proxyBuilder.Except().ForMembers(memberInfo => memberInfo.Name == "SomeOtherProperty").Build();
 
             var propertyValue = proxy.SomeProperty;
 
@@ -636,7 +636,7 @@ namespace Sws.Threading.Tests
 
             var proxyBuilder = CreateThreadSafeProxyBuilder(testMock.Object, lockFactory);
 
-            var proxy = proxyBuilder.ExceptForSetter(test => test.SomeProperty).Build();
+            var proxy = proxyBuilder.Except().ForSetter(test => test.SomeProperty).Build();
 
             var propertyValue = proxy.SomeProperty;
 
@@ -666,7 +666,7 @@ namespace Sws.Threading.Tests
 
             var proxyBuilder = CreateThreadSafeProxyBuilder(testMock.Object, lockFactory);
 
-            var proxy = proxyBuilder.ExceptForGetter(test => test.SomeProperty).Build();
+            var proxy = proxyBuilder.Except().ForGetter(test => test.SomeProperty).Build();
 
             var propertyValue = proxy.SomeProperty;
 
@@ -696,7 +696,7 @@ namespace Sws.Threading.Tests
 
             var proxyBuilder = CreateThreadSafeProxyBuilder(testMock.Object, lockFactory);
 
-            var proxy = proxyBuilder.ExceptForGetter(test => test.SomeProperty).Build();
+            var proxy = proxyBuilder.Except().ForGetter(test => test.SomeProperty).Build();
 
             proxy.SomeProperty = true;
 
@@ -726,7 +726,7 @@ namespace Sws.Threading.Tests
 
             var proxyBuilder = CreateThreadSafeProxyBuilder(testMock.Object, lockFactory);
 
-            var proxy = proxyBuilder.ExceptForSetter(test => test.SomeProperty).Build();
+            var proxy = proxyBuilder.Except().ForSetter(test => test.SomeProperty).Build();
 
             proxy.SomeProperty = true;
 

@@ -8,50 +8,25 @@ using Sws.Threading.Reflection;
 
 namespace Sws.Threading
 {
-    public class ThreadSafeProxyBuilder<TProxy> where TProxy : class
+
+    public abstract class ForMembersThreadSafeProxyBuilderContextBase<TProxy> where TProxy : class
     {
-
-        private readonly TProxy _subject;
-
-        private Func<object, ILock> _lockFactory;
-
-        private readonly ThreadSafeProxyFactory _threadSafeProxyFactory;
 
         private readonly MethodInfoExtractor _methodInfoExtractor;
 
-        private bool _includedMethodInfosSpecified = false;
-
-        private List<MethodInfo> _includedMethodInfos = new List<MethodInfo>();
-
-        private bool _excludedMethodInfosSpecified = false;
-
-        private List<MethodInfo> _excludedMethodInfos = new List<MethodInfo>();
-
-        private object _lockingObject = null;
-
-        public ThreadSafeProxyBuilder(TProxy subject)
+        internal ForMembersThreadSafeProxyBuilderContextBase(MethodInfoExtractor methodInfoExtractor)
         {
-            if (subject == null)
+            if (methodInfoExtractor == null)
             {
-                throw new ArgumentNullException("subject");
+                throw new ArgumentNullException("methodInfoExtractor");
             }
 
-            _subject = subject;
-
-            var dependencies = DependencyResolver.GetThreadSafeProxyBuilderDependencies();
-
-            _threadSafeProxyFactory = dependencies.ThreadSafeProxyFactory;
-            _methodInfoExtractor = dependencies.MethodInfoExtractor;
-            _lockFactory = dependencies.DefaultLockFactory;
+            _methodInfoExtractor = methodInfoExtractor;
         }
 
-        public TProxy Subject
-        {
-            get { return _subject; }
-        }
-        
         /// <summary>
-        /// Specifies that the TProxy member described by the expression will be made thread-safe.
+        /// Specifies that the TProxy member described by the expression be included in the current context.  In the standard context,
+        /// this means it will be made thread-safe.  Immediately following an "Except()" call, it will explicitly not be made thread-safe.
         /// </summary>
         /// <param name="memberExpression"></param>
         /// <returns></returns>
@@ -67,7 +42,8 @@ namespace Sws.Threading
         }
 
         /// <summary>
-        /// Specifies that the TProxy setter described by the expression will be made thread-safe.
+        /// Specifies that the TProxy setter described by the expression be included in the current context.  In the standard context,
+        /// this means it will be made thread-safe.  Immediately following an "Except()" call, it will explicitly not be made thread-safe.
         /// </summary>
         /// <param name="memberExpression"></param>
         /// <returns></returns>
@@ -83,7 +59,8 @@ namespace Sws.Threading
         }
 
         /// <summary>
-        /// Specifies that the TProxy getter described by the expression will be made thread-safe.
+        /// Specifies that the TProxy getter described by the expression be included in the current context.  In the standard context,
+        /// this means it will be made thread-safe.  Immediately following an "Except()" call, it will explicitly not be made thread-safe.
         /// </summary>
         /// <param name="memberExpression"></param>
         /// <returns></returns>
@@ -99,7 +76,8 @@ namespace Sws.Threading
         }
 
         /// <summary>
-        /// Specifies that the TProxy member described by the expression will be made thread-safe.
+        /// Specifies that the TProxy member described by the expression be included in the current context.  In the standard context,
+        /// this means it will be made thread-safe.  Immediately following an "Except()" call, it will explicitly not be made thread-safe.
         /// </summary>
         /// <param name="memberExpression"></param>
         /// <returns></returns>
@@ -115,7 +93,8 @@ namespace Sws.Threading
         }
 
         /// <summary>
-        /// Specifies that the TProxy members listed will be made thread-safe.
+        /// Specifies that the TProxy members listed will be included in the current context.  In the standard context,
+        /// this means they will be made thread-safe.  Immediately following an "Except()" call, they will explicitly not be made thread-safe.
         /// </summary>
         /// <param name="memberInfos"></param>
         /// <returns></returns>
@@ -131,7 +110,8 @@ namespace Sws.Threading
         }
 
         /// <summary>
-        /// Specifies that proxy members which match the memberSelector predicate will be made thread-safe.
+        /// Specifies that proxy members which match the memberSelector predicate be included in the current context.  In the standard context,
+        /// this means they will be made thread-safe.  Immediately following an "Except()" call, they will explicitly not be made thread-safe.
         /// </summary>
         /// <param name="memberSelector"></param>
         /// <returns></returns>
@@ -146,121 +126,77 @@ namespace Sws.Threading
             return ForMethods(_methodInfoExtractor.ExtractMethods<TProxy>(memberSelector));
         }
 
-        /// <summary>
-        /// Specifies that the TProxy member described by the expression will not be made thread-safe.
-        /// </summary>
-        /// <param name="memberExpression"></param>
-        /// <returns></returns>
+        protected abstract ThreadSafeProxyBuilder<TProxy> ForMethods(IEnumerable<MethodInfo> methodInfos);
+        
+    }
 
-        public ThreadSafeProxyBuilder<TProxy> ExceptForMember(Expression<Action<TProxy>> memberExpression)
+    public class SingleUseForMembersThreadSafeProxyBuilderContext<TProxy> : ForMembersThreadSafeProxyBuilderContextBase<TProxy> where TProxy : class
+    {
+
+        private readonly Func<IEnumerable<MethodInfo>, ThreadSafeProxyBuilder<TProxy>> _forMethodApplier;
+
+        internal SingleUseForMembersThreadSafeProxyBuilderContext(MethodInfoExtractor methodInfoExtractor, Func<IEnumerable<MethodInfo>, ThreadSafeProxyBuilder<TProxy>> forMethodApplier)
+            : base(methodInfoExtractor)
         {
-            if (memberExpression == null)
+            if (forMethodApplier == null)
             {
-                throw new ArgumentNullException("memberExpression");
+                throw new ArgumentNullException("forMethodApplier");
             }
 
-            return ExceptForMethods(_methodInfoExtractor.ExtractMethods<TProxy>(memberExpression));
+            _forMethodApplier = forMethodApplier;
         }
 
-        /// <summary>
-        /// Specifies that the TProxy member described by the expression will not be made thread-safe.
-        /// </summary>
-        /// <param name="memberExpression"></param>
-        /// <returns></returns>
-         
-        public ThreadSafeProxyBuilder<TProxy> ExceptForMember<TReturn>(Expression<Func<TProxy, TReturn>> memberExpression)
+        protected override ThreadSafeProxyBuilder<TProxy> ForMethods(IEnumerable<MethodInfo> methodInfos)
         {
-            if (memberExpression == null)
+            return _forMethodApplier(methodInfos);
+        }
+
+    }
+
+    public class ThreadSafeProxyBuilder<TProxy> : ForMembersThreadSafeProxyBuilderContextBase<TProxy> where TProxy : class
+    {
+
+        private readonly TProxy _subject;
+
+        private Func<object, ILock> _lockFactory;
+
+        private readonly MethodInfoExtractor _methodInfoExtractor;
+
+        private readonly ThreadSafeProxyFactory _threadSafeProxyFactory;
+
+        private bool _includedMethodInfosSpecified = false;
+
+        private List<MethodInfo> _includedMethodInfos = new List<MethodInfo>();
+
+        private bool _excludedMethodInfosSpecified = false;
+
+        private List<MethodInfo> _excludedMethodInfos = new List<MethodInfo>();
+
+        private object _lockingObject = null;
+
+        public ThreadSafeProxyBuilder(TProxy subject) : this(subject, DependencyResolver.GetThreadSafeProxyBuilderDependencies())
+        {
+        }
+
+        internal ThreadSafeProxyBuilder(TProxy subject, DependencyResolver.ThreadSafeProxyBuilderDependencies dependencies) : base(dependencies.MethodInfoExtractor)
+        {
+            if (subject == null)
             {
-                throw new ArgumentNullException("memberExpression");
+                throw new ArgumentNullException("subject");
             }
 
-            return ExceptForMethods(_methodInfoExtractor.ExtractMethods<TProxy>(memberExpression));
+            _subject = subject;
+
+            _threadSafeProxyFactory = dependencies.ThreadSafeProxyFactory;
+            _methodInfoExtractor = dependencies.MethodInfoExtractor;
+            _lockFactory = dependencies.DefaultLockFactory;
         }
 
-
-        /// <summary>
-        /// Specifies that the TProxy setter described by the expression will be made thread-safe.
-        /// </summary>
-        /// <param name="memberExpression"></param>
-        /// <returns></returns>
-
-        public ThreadSafeProxyBuilder<TProxy> ExceptForSetter<TReturn>(Expression<Func<TProxy, TReturn>> memberExpression)
+        public TProxy Subject
         {
-            if (memberExpression == null)
-            {
-                throw new ArgumentNullException("memberExpression");
-            }
-
-            return ExceptForMethods(_methodInfoExtractor.ExtractSetters<TProxy>(memberExpression));
+            get { return _subject; }
         }
-
-        /// <summary>
-        /// Specifies that the TProxy getter described by the expression will be made thread-safe.
-        /// </summary>
-        /// <param name="memberExpression"></param>
-        /// <returns></returns>
-
-        public ThreadSafeProxyBuilder<TProxy> ExceptForGetter<TReturn>(Expression<Func<TProxy, TReturn>> memberExpression)
-        {
-            if (memberExpression == null)
-            {
-                throw new ArgumentNullException("memberExpression");
-            }
-
-            return ExceptForMethods(_methodInfoExtractor.ExtractGetters<TProxy>(memberExpression));
-        }
-
-        /// <summary>
-        /// Specifies that the TProxy members listed will not be made thread-safe.
-        /// </summary>
-        /// <param name="memberInfos"></param>
-        /// <returns></returns>
-
-        public ThreadSafeProxyBuilder<TProxy> ExceptForMembers(params MemberInfo[] memberInfos)
-        {
-            if (memberInfos == null)
-            {
-                throw new ArgumentNullException("memberInfos");
-            }
-
-            return ExceptForMethods(_methodInfoExtractor.ExtractMethods<TProxy>(memberInfos));
-        }
-
-        /// <summary>
-        /// Specifies that proxy members which match the memberSelector predicate will not be made thread-safe.
-        /// </summary>
-        /// <param name="memberSelector"></param>
-        /// <returns></returns>
-
-        public ThreadSafeProxyBuilder<TProxy> ExceptForMembers(Predicate<MemberInfo> memberSelector)
-        {
-            if (memberSelector == null)
-            {
-                throw new ArgumentNullException("memberSelector");
-            }
-
-            return ExceptForMethods(_methodInfoExtractor.ExtractMethods<TProxy>(memberSelector));
-        }
-
-        private ThreadSafeProxyBuilder<TProxy> ForMethods(IEnumerable<MethodInfo> methodInfos)
-        {
-            _includedMethodInfosSpecified = true;
-
-            _includedMethodInfos.AddRange(methodInfos);
-
-            return this;
-        }
-
-        private ThreadSafeProxyBuilder<TProxy> ExceptForMethods(IEnumerable<MethodInfo> methodInfos)
-        {
-            _excludedMethodInfosSpecified = true;
-
-            _excludedMethodInfos.AddRange(methodInfos);
-
-            return this;
-        }
-
+        
         /// <summary>
         /// Specifies an object on which to lock.  This will be passed to the lock factory when the proxy is built.
         /// </summary>
@@ -324,5 +260,39 @@ namespace Sws.Threading
             return _threadSafeProxyFactory.CreateProxy(_subject, methodInfo => methodInfoIncluder(methodInfo) && (!methodInfoExcluder(methodInfo)), _lockFactory(_lockingObject ?? new object()));
         }
 
+        private ThreadSafeProxyBuilder<TProxy> IncludeMethods(IEnumerable<MethodInfo> methodInfos)
+        {
+            _includedMethodInfosSpecified = true;
+
+            _includedMethodInfos.AddRange(methodInfos);
+
+            return this;
+        }
+
+        private ThreadSafeProxyBuilder<TProxy> ExcludeMethods(IEnumerable<MethodInfo> methodInfos)
+        {
+            _excludedMethodInfosSpecified = true;
+
+            _excludedMethodInfos.AddRange(methodInfos);
+
+            return this;
+        }
+
+        protected override ThreadSafeProxyBuilder<TProxy> ForMethods(IEnumerable<MethodInfo> methodInfos)
+        {
+            return IncludeMethods(methodInfos);
+        }
+
+        /// <summary>
+        /// Temporarily switches to an "Except" context.  The members specified with the method call immediately following this will not be thread-safed.
+        /// </summary>
+        /// <returns></returns>
+
+        public SingleUseForMembersThreadSafeProxyBuilderContext<TProxy> Except()
+        {
+            return new SingleUseForMembersThreadSafeProxyBuilderContext<TProxy>(_methodInfoExtractor, ExcludeMethods);
+        }
+
     }
+
 }
