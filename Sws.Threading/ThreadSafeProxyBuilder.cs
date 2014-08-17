@@ -246,12 +246,14 @@ namespace Sws.Threading
 
             if (_includedMethodInfosSpecified)
             {
-                methodInfoIncluder = methodInfo => _includedMethodInfos.Contains(methodInfo);
+                var includedMethodInfos = _includedMethodInfos.ToArray();
+                methodInfoIncluder = methodInfo => includedMethodInfos.Contains(methodInfo);
             }
 
             if (_excludedMethodInfosSpecified)
             {
-                methodInfoExcluder = methodInfo => _excludedMethodInfos.Contains(methodInfo);
+                var excludedMethodInfos = _excludedMethodInfos.ToArray();
+                methodInfoExcluder = methodInfo => excludedMethodInfos.Contains(methodInfo);
             }
 
             return _threadSafeProxyFactory.CreateProxy(_subject, methodInfo => methodInfoIncluder(methodInfo) && (!methodInfoExcluder(methodInfo)), _lockFactory(_lockingObject ?? new object()));
