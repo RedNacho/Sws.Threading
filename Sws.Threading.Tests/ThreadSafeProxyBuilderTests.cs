@@ -209,7 +209,7 @@ namespace Sws.Threading.Tests
         }
 
         [TestMethod]
-        public void ThreadSafeProxyNotInLockWhenInterfaceMemberSpecifiedInNotForMemberLambdaExpression()
+        public void ThreadSafeProxyNotInLockWhenInterfaceMemberSpecifiedInExceptForMemberLambdaExpression()
         {
             var testMock = new Mock<ITest>();
 
@@ -231,7 +231,7 @@ namespace Sws.Threading.Tests
 
             var proxyBuilder = CreateThreadSafeProxyBuilder(testMock.Object, lockFactory);
 
-            var proxy = proxyBuilder.NotForMember(test => test.SomeProperty).Build();
+            var proxy = proxyBuilder.ExceptForMember(test => test.SomeProperty).Build();
 
             var propertyValue = proxy.SomeProperty;
 
@@ -239,7 +239,7 @@ namespace Sws.Threading.Tests
         }
 
         [TestMethod]
-        public void ThreadSafeProxyInLockWhenInterfaceMemberNotSpecifiedInNotForMemberLambdaExpression()
+        public void ThreadSafeProxyInLockWhenInterfaceMemberNotSpecifiedInExceptForMemberLambdaExpression()
         {
             var testMock = new Mock<ITest>();
 
@@ -261,7 +261,7 @@ namespace Sws.Threading.Tests
 
             var proxyBuilder = CreateThreadSafeProxyBuilder(testMock.Object, lockFactory);
 
-            var proxy = proxyBuilder.NotForMembers().Build();
+            var proxy = proxyBuilder.ExceptForMembers().Build();
 
             var propertyValue = proxy.SomeProperty;
 

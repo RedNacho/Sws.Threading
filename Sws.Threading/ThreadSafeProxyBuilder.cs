@@ -104,14 +104,14 @@ namespace Sws.Threading
         /// <param name="memberExpression"></param>
         /// <returns></returns>
 
-        public ThreadSafeProxyBuilder<TProxy> NotForMember(Expression<Action<TProxy>> memberExpression)
+        public ThreadSafeProxyBuilder<TProxy> ExceptForMember(Expression<Action<TProxy>> memberExpression)
         {
             if (memberExpression == null)
             {
                 throw new ArgumentNullException("memberExpression");
             }
 
-            return NotForMethods(_methodInfoExtractor.ExtractMethods<TProxy>(memberExpression));
+            return ExceptForMethods(_methodInfoExtractor.ExtractMethods<TProxy>(memberExpression));
         }
 
         /// <summary>
@@ -120,14 +120,14 @@ namespace Sws.Threading
         /// <param name="memberExpression"></param>
         /// <returns></returns>
          
-        public ThreadSafeProxyBuilder<TProxy> NotForMember<TReturn>(Expression<Func<TProxy, TReturn>> memberExpression)
+        public ThreadSafeProxyBuilder<TProxy> ExceptForMember<TReturn>(Expression<Func<TProxy, TReturn>> memberExpression)
         {
             if (memberExpression == null)
             {
                 throw new ArgumentNullException("memberExpression");
             }
 
-            return NotForMethods(_methodInfoExtractor.ExtractMethods<TProxy>(memberExpression));
+            return ExceptForMethods(_methodInfoExtractor.ExtractMethods<TProxy>(memberExpression));
         }
 
         /// <summary>
@@ -136,14 +136,14 @@ namespace Sws.Threading
         /// <param name="memberInfos"></param>
         /// <returns></returns>
 
-        public ThreadSafeProxyBuilder<TProxy> NotForMembers(params MemberInfo[] memberInfos)
+        public ThreadSafeProxyBuilder<TProxy> ExceptForMembers(params MemberInfo[] memberInfos)
         {
             if (memberInfos == null)
             {
                 throw new ArgumentNullException("memberInfos");
             }
 
-            return NotForMethods(_methodInfoExtractor.ExtractMethods<TProxy>(memberInfos));
+            return ExceptForMethods(_methodInfoExtractor.ExtractMethods<TProxy>(memberInfos));
         }
 
         private ThreadSafeProxyBuilder<TProxy> ForMethods(IEnumerable<MethodInfo> methodInfos)
@@ -155,7 +155,7 @@ namespace Sws.Threading
             return this;
         }
 
-        private ThreadSafeProxyBuilder<TProxy> NotForMethods(IEnumerable<MethodInfo> methodInfos)
+        private ThreadSafeProxyBuilder<TProxy> ExceptForMethods(IEnumerable<MethodInfo> methodInfos)
         {
             _excludedMethodInfosSpecified = true;
 
