@@ -14,7 +14,7 @@ Please note that only virtual members can be proxied - Castle will try to subcla
 You can chain calls to the extension methods to build up proxies with more complicated synchronisation requirements.
 
 E.g.
-obj = obj.ConfigureThreadSafeProxy().ForMember(proxy => proxy.SomeMethod()).Build().ConfigureThreadSafeProxy().NotForMember(proxy => proxy.SomeMethod()).Build() will have the effect of thread-safing SomeMethod separately to all of the other members of the object.
+obj = obj.ConfigureThreadSafeProxy().ForMember(proxy => proxy.SomeMethod()).Build().ConfigureThreadSafeProxy().ExceptForMember(proxy => proxy.SomeMethod()).Build() will have the effect of thread-safing SomeMethod separately to all of the other members of the object.
 
 Conversely, you can synchronise across multiple objects by explicitly specifying an object to synchronise on.
 
