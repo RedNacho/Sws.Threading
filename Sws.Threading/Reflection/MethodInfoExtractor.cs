@@ -10,16 +10,22 @@ namespace Sws.Threading.Reflection
     internal class MethodInfoExtractor
     {
 
-        public IEnumerable<MethodInfo> ExtractMethods<TDeclaringType>(Expression memberExpression)
+        public IEnumerable<MethodInfo> ExtractMethods<TDeclaring>(Expression memberExpression)
         {
-            return ExtractMethods<TDeclaringType>(ExtractMembers<TDeclaringType>(memberExpression).ToArray());
+            return ExtractMethods<TDeclaring>(ExtractMembers<TDeclaring>(memberExpression).ToArray());
         }
 
-        public IEnumerable<MethodInfo> ExtractMethods<TDeclaringType>(MemberInfo[] memberInfos)
+        public IEnumerable<MethodInfo> ExtractMethods<TDeclaring>(Predicate<MemberInfo> memberSelector)
+        {
+            return ExtractMethods<TDeclaring>(
+                typeof(TDeclaring).GetMembers().Where(memberInfo => memberSelector(memberInfo)).ToArray());
+        }
+
+        public IEnumerable<MethodInfo> ExtractMethods<TDeclaring>(MemberInfo[] memberInfos)
         {
             return GetMethods(memberInfos)
                 .Union(GetGettersAndSetters(GetProperties(memberInfos)))
-                .Where(methodInfo => methodInfo.DeclaringType == typeof(TDeclaringType))
+                .Where(methodInfo => methodInfo.DeclaringType == typeof(TDeclaring))
                 .Distinct();
         }
 
@@ -40,23 +46,23 @@ namespace Sws.Threading.Reflection
             return memberInfos.Select(memberInfo => memberInfo as MethodInfo).Where(methodInfo => methodInfo != null);
         }
 
-        private IEnumerable<MemberInfo> ExtractMembers<TDeclaringType>(Expression expression)
+        private IEnumerable<MemberInfo> ExtractMembers<TDeclaring>(Expression expression)
         {
-            var visitor = new MemberInfoExpressionVisitor<TDeclaringType>();
+            var visitor = new MemberInfoExpressionVisitor<TDeclaring>();
 
             visitor.Visit(expression);
 
             return visitor.MemberInfos;
         }
 
-        private class MemberInfoExpressionVisitor<TDeclaringType> : ExpressionVisitor
+        private class MemberInfoExpressionVisitor<TDeclaring> : ExpressionVisitor
         {
 
             private List<MemberInfo> _memberInfos = new List<MemberInfo>();
 
             protected override Expression VisitMember(MemberExpression node)
             {
-                if (node.Member.DeclaringType == typeof(TDeclaringType))
+                if (node.Member.DeclaringType == typeof(TDeclaring))
                 {
                     _memberInfos.Add(node.Member);
                 }
@@ -66,7 +72,7 @@ namespace Sws.Threading.Reflection
 
             protected override Expression VisitMethodCall(MethodCallExpression node)
             {
-                if (node.Method.DeclaringType == typeof(TDeclaringType))
+                if (node.Method.DeclaringType == typeof(TDeclaring))
                 {
                     _memberInfos.Add(node.Method);
                 }

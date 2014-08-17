@@ -99,6 +99,22 @@ namespace Sws.Threading
         }
 
         /// <summary>
+        /// Specifies that proxy members which match the memberSelector predicate will be made thread-safe.
+        /// </summary>
+        /// <param name="memberSelector"></param>
+        /// <returns></returns>
+
+        public ThreadSafeProxyBuilder<TProxy> ForMembers(Predicate<MemberInfo> memberSelector)
+        {
+            if (memberSelector == null)
+            {
+                throw new ArgumentNullException("memberSelector");
+            }
+
+            return ForMethods(_methodInfoExtractor.ExtractMethods<TProxy>(memberSelector));
+        }
+
+        /// <summary>
         /// Specifies that the TProxy member described by the expression will not be made thread-safe.
         /// </summary>
         /// <param name="memberExpression"></param>
@@ -144,6 +160,22 @@ namespace Sws.Threading
             }
 
             return ExceptForMethods(_methodInfoExtractor.ExtractMethods<TProxy>(memberInfos));
+        }
+
+        /// <summary>
+        /// Specifies that proxy members which match the memberSelector predicate will not be made thread-safe.
+        /// </summary>
+        /// <param name="memberSelector"></param>
+        /// <returns></returns>
+
+        public ThreadSafeProxyBuilder<TProxy> ExceptForMembers(Predicate<MemberInfo> memberSelector)
+        {
+            if (memberSelector == null)
+            {
+                throw new ArgumentNullException("memberSelector");
+            }
+
+            return ExceptForMethods(_methodInfoExtractor.ExtractMethods<TProxy>(memberSelector));
         }
 
         private ThreadSafeProxyBuilder<TProxy> ForMethods(IEnumerable<MethodInfo> methodInfos)
