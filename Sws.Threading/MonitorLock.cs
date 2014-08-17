@@ -16,6 +16,11 @@ namespace Sws.Threading
 
         public MonitorLock(object lockingObject)
         {
+            if (lockingObject == null)
+            {
+                throw new ArgumentNullException("lockingObject");
+            }
+
             _lockingObject = lockingObject;
         }
 
