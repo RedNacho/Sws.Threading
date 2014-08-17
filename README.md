@@ -11,4 +11,20 @@ Basic usage:
 
 Please note that only virtual members can be proxied - Castle will try to subclass classes and implement interfaces.
 
-See the Sws.Threading.Demo solution for an example of these methods in use.
+You can chain calls to the extension methods to build up proxies with more complicated synchronisation requirements.
+
+E.g.
+obj = obj.ConfigureThreadSafeProxy().ForMember(proxy => proxy.SomeMethod()).Build().ConfigureThreadSafeProxy().NotForMember(proxy => proxy.SomeMethod()).Build() will have the effect of thread-safing SomeMethod separately to all of the other members of the object.
+
+Conversely, you can synchronise across multiple objects by explicitly specifying an object to synchronise on.
+
+E.g.
+var lockingObject = new object();
+obj1 = obj1.ConfigureThreadSafeProxy().WithLockingObject(lockingObject).Build();
+obj2 = obj2.ConfigureThreadSafeProxy().WithLockingObject(lockingObject).Build();
+
+Finally, you can override the synchronisation mechanism itself as follows:
+
+obj = obj.ConfigureThreadSafeProxy().WithLockFactory(lockingObject => new MyLockImplementation(lockingObject));
+
+See the Sws.Threading.Demo solution for an example of the extension methods in use.
