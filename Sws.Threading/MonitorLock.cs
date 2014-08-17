@@ -6,6 +6,10 @@ using System.Threading;
 
 namespace Sws.Threading
 {
+
+    /// <summary>
+    /// Implementation of a lock which uses System.Threading.Monitor.
+    /// </summary>
     public class MonitorLock : ILock
     {
         private readonly object _lockingObject;

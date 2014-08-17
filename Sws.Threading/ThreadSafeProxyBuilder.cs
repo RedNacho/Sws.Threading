@@ -50,6 +50,12 @@ namespace Sws.Threading
             get { return _subject; }
         }
         
+        /// <summary>
+        /// Specifies that the TProxy member described by the expression will be made thread-safe.
+        /// </summary>
+        /// <param name="memberExpression"></param>
+        /// <returns></returns>
+
         public ThreadSafeProxyBuilder<TProxy> ForMember(Expression<Action<TProxy>> memberExpression)
         {
             if (memberExpression == null)
@@ -59,6 +65,12 @@ namespace Sws.Threading
 
             return ForMethods(_methodInfoExtractor.ExtractMethods<TProxy>(memberExpression));
         }
+
+        /// <summary>
+        /// Specifies that the TProxy member described by the expression will be made thread-safe.
+        /// </summary>
+        /// <param name="memberExpression"></param>
+        /// <returns></returns>
 
         public ThreadSafeProxyBuilder<TProxy> ForMember<TReturn>(Expression<Func<TProxy, TReturn>> memberExpression)
         {
@@ -70,6 +82,12 @@ namespace Sws.Threading
             return ForMethods(_methodInfoExtractor.ExtractMethods<TProxy>(memberExpression));
         }
 
+        /// <summary>
+        /// Specifies that the TProxy members listed will be made thread-safe.
+        /// </summary>
+        /// <param name="memberInfos"></param>
+        /// <returns></returns>
+
         public ThreadSafeProxyBuilder<TProxy> ForMembers(params MemberInfo[] memberInfos)
         {
             if (memberInfos == null)
@@ -79,6 +97,12 @@ namespace Sws.Threading
 
             return ForMethods(_methodInfoExtractor.ExtractMethods<TProxy>(memberInfos));
         }
+
+        /// <summary>
+        /// Specifies that the TProxy member described by the expression will not be made thread-safe.
+        /// </summary>
+        /// <param name="memberExpression"></param>
+        /// <returns></returns>
 
         public ThreadSafeProxyBuilder<TProxy> NotForMember(Expression<Action<TProxy>> memberExpression)
         {
@@ -90,6 +114,12 @@ namespace Sws.Threading
             return NotForMethods(_methodInfoExtractor.ExtractMethods<TProxy>(memberExpression));
         }
 
+        /// <summary>
+        /// Specifies that the TProxy member described by the expression will not be made thread-safe.
+        /// </summary>
+        /// <param name="memberExpression"></param>
+        /// <returns></returns>
+         
         public ThreadSafeProxyBuilder<TProxy> NotForMember<TReturn>(Expression<Func<TProxy, TReturn>> memberExpression)
         {
             if (memberExpression == null)
@@ -99,6 +129,12 @@ namespace Sws.Threading
 
             return NotForMethods(_methodInfoExtractor.ExtractMethods<TProxy>(memberExpression));
         }
+
+        /// <summary>
+        /// Specifies that the TProxy members listed will not be made thread-safe.
+        /// </summary>
+        /// <param name="memberInfos"></param>
+        /// <returns></returns>
 
         public ThreadSafeProxyBuilder<TProxy> NotForMembers(params MemberInfo[] memberInfos)
         {
@@ -128,6 +164,12 @@ namespace Sws.Threading
             return this;
         }
 
+        /// <summary>
+        /// Specifies an object on which to lock.  This will be passed to the lock factory when the proxy is built.
+        /// </summary>
+        /// <param name="lockingObject"></param>
+        /// <returns></returns>
+
         public ThreadSafeProxyBuilder<TProxy> WithLockingObject(object lockingObject)
         {
             if (lockingObject == null)
@@ -140,6 +182,12 @@ namespace Sws.Threading
             return this;
         }
 
+        /// <summary>
+        /// Specifies a lock factory to use when creating thread locks.
+        /// </summary>
+        /// <param name="lockFactory"></param>
+        /// <returns></returns>
+
         public ThreadSafeProxyBuilder<TProxy> WithLockFactory(Func<object, ILock> lockFactory)
         {
             if (lockFactory == null)
@@ -151,6 +199,13 @@ namespace Sws.Threading
 
             return this;
         }
+
+        /// <summary>
+        /// Builds the proxy.  If no explicit ForMember(s) calls were made, all members will be thread-safe, except any explicitly excluded through
+        /// NotForMember(s) calls.  If no WithLockFactory call was made, a default lock factory which uses System.Threading.Monitor (equivalent to the
+        /// lock keyword) will be used.  If no WithLockingObject call was made, a dedicated locking object will be newed up with each call.
+        /// </summary>
+        /// <returns></returns>
 
         public TProxy Build()
         {
