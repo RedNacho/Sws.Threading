@@ -178,6 +178,39 @@ namespace Sws.Threading
             return ExceptForMethods(_methodInfoExtractor.ExtractMethods<TProxy>(memberExpression));
         }
 
+
+        /// <summary>
+        /// Specifies that the TProxy setter described by the expression will be made thread-safe.
+        /// </summary>
+        /// <param name="memberExpression"></param>
+        /// <returns></returns>
+
+        public ThreadSafeProxyBuilder<TProxy> ExceptForSetter<TReturn>(Expression<Func<TProxy, TReturn>> memberExpression)
+        {
+            if (memberExpression == null)
+            {
+                throw new ArgumentNullException("memberExpression");
+            }
+
+            return ExceptForMethods(_methodInfoExtractor.ExtractSetters<TProxy>(memberExpression));
+        }
+
+        /// <summary>
+        /// Specifies that the TProxy getter described by the expression will be made thread-safe.
+        /// </summary>
+        /// <param name="memberExpression"></param>
+        /// <returns></returns>
+
+        public ThreadSafeProxyBuilder<TProxy> ExceptForGetter<TReturn>(Expression<Func<TProxy, TReturn>> memberExpression)
+        {
+            if (memberExpression == null)
+            {
+                throw new ArgumentNullException("memberExpression");
+            }
+
+            return ExceptForMethods(_methodInfoExtractor.ExtractGetters<TProxy>(memberExpression));
+        }
+
         /// <summary>
         /// Specifies that the TProxy members listed will not be made thread-safe.
         /// </summary>
