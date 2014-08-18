@@ -162,15 +162,15 @@ namespace Sws.Threading
 
         private readonly MethodInfoExtractor _methodInfoExtractor;
 
-        private readonly ThreadSafeProxyFactory _threadSafeProxyFactory;
+        private IThreadSafeProxyFactory _threadSafeProxyFactory;
 
         private bool _includedMethodInfosSpecified = false;
 
-        private List<MethodInfo> _includedMethodInfos = new List<MethodInfo>();
+        private readonly List<MethodInfo> _includedMethodInfos = new List<MethodInfo>();
 
         private bool _excludedMethodInfosSpecified = false;
 
-        private List<MethodInfo> _excludedMethodInfos = new List<MethodInfo>();
+        private readonly List<MethodInfo> _excludedMethodInfos = new List<MethodInfo>();
 
         private object _lockingObject = null;
 
@@ -187,7 +187,7 @@ namespace Sws.Threading
 
             _subject = subject;
 
-            _threadSafeProxyFactory = dependencies.ThreadSafeProxyFactory;
+            _threadSafeProxyFactory = dependencies.DefaultThreadSafeProxyFactory;
             _methodInfoExtractor = dependencies.MethodInfoExtractor;
             _lockFactory = dependencies.DefaultLockFactory;
         }
@@ -196,7 +196,17 @@ namespace Sws.Threading
         {
             get { return _subject; }
         }
-        
+
+        public IThreadSafeProxyFactory ThreadSafeProxyFactory
+        {
+            get { return _threadSafeProxyFactory; }
+        }
+
+        public Func<object, ILock> LockFactory
+        {
+            get { return _lockFactory; }
+        }
+
         /// <summary>
         /// Specifies an object on which to lock.  This will be passed to the lock factory when the proxy is built.
         /// </summary>
@@ -233,6 +243,18 @@ namespace Sws.Threading
             return this;
         }
 
+        public ThreadSafeProxyBuilder<TProxy> WithThreadSafeProxyFactory(IThreadSafeProxyFactory threadSafeProxyFactory)
+        {
+            if (threadSafeProxyFactory == null)
+            {
+                throw new ArgumentNullException("threadSafeProxyFactory");
+            }
+
+            _threadSafeProxyFactory = threadSafeProxyFactory;
+
+            return this;
+        }
+
         /// <summary>
         /// Builds the proxy.  If no explicit ForMember(s) calls were made, all members will be thread-safe, except any explicitly excluded through
         /// NotForMember(s) calls.  If no WithLockFactory call was made, a default lock factory which uses System.Threading.Monitor (equivalent to the
@@ -242,22 +264,23 @@ namespace Sws.Threading
 
         public TProxy Build()
         {
-            Predicate<MethodInfo> methodInfoIncluder = methodInfo => true;
-            Predicate<MethodInfo> methodInfoExcluder = methodInfo => false;
-
-            if (_includedMethodInfosSpecified)
-            {
-                var includedMethodInfos = _includedMethodInfos.ToArray();
-                methodInfoIncluder = methodInfo => includedMethodInfos.Contains(methodInfo);
-            }
-
-            if (_excludedMethodInfosSpecified)
-            {
-                var excludedMethodInfos = _excludedMethodInfos.ToArray();
-                methodInfoExcluder = methodInfo => excludedMethodInfos.Contains(methodInfo);
-            }
+            var methodInfoIncluder = GenerateMethodInfoPredicate(true, _includedMethodInfosSpecified, _includedMethodInfos);
+            var methodInfoExcluder = GenerateMethodInfoPredicate(false, _excludedMethodInfosSpecified, _excludedMethodInfos);
 
             return _threadSafeProxyFactory.CreateProxy(_subject, methodInfo => methodInfoIncluder(methodInfo) && (!methodInfoExcluder(methodInfo)), _lockFactory(_lockingObject ?? new object()));
+        }
+
+        private Predicate<MethodInfo> GenerateMethodInfoPredicate(bool defaultValue, bool methodInfosSpecified, IEnumerable<MethodInfo> methodInfos)
+        {
+            Predicate<MethodInfo> methodInfoPredicate = methodInfo => defaultValue;
+
+            if (methodInfosSpecified)
+            {
+                var methodInfoArray = methodInfos.ToArray();
+                methodInfoPredicate = methodInfoArray.Contains;
+            }
+
+            return methodInfoPredicate;
         }
 
         private ThreadSafeProxyBuilder<TProxy> IncludeMethods(IEnumerable<MethodInfo> methodInfos)

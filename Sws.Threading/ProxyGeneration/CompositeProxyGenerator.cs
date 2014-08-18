@@ -7,7 +7,7 @@ using Castle.DynamicProxy;
 namespace Sws.Threading.ProxyGeneration
 {
 
-    internal class CompositeProxyGenerator : IProxyGenerator
+    public class CompositeProxyGenerator : IProxyGenerator
     {
 
         private readonly IProxyGenerator[] _components;
