@@ -3,6 +3,7 @@ using System.Text;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using FluentAssertions;
@@ -702,7 +703,7 @@ namespace Sws.Threading.Tests
 
             lockEntryCountDuringCallback.Should().Be(1);
         }
-
+        
         [TestMethod]
         public void ThreadSafeProxyNotInLockOnWriteWhenInterfaceMemberSpecifiedInExceptForSetterLambdaExpression()
         {
@@ -733,6 +734,41 @@ namespace Sws.Threading.Tests
             lockEntryCountDuringCallback.Should().Be(0);
         }
 
+        [TestMethod]
+        public void ThreadSafeProxyCreatedByAlternativeThreadSafeProxyFactoryIfSpecified()
+        {
+            var threadSafeProxyFactoryMock = new Mock<IThreadSafeProxyFactory>();
+
+            var testMock = new Mock<ITest>();
+
+            var proxyMock = new Mock<ITest>();
+
+            var someProperty = typeof(ITest).GetProperties().Where(propertyInfo => propertyInfo.Name == "SomeProperty").Single();
+
+            var somePropertySetter = someProperty.GetSetMethod();
+            var somePropertyGetter = someProperty.GetGetMethod();
+
+            var generatedLocks = new List<ILock>();
+
+            threadSafeProxyFactoryMock.Setup(threadSafeProxyFactory => threadSafeProxyFactory.CreateProxy<ITest>(
+                    testMock.Object,
+                    It.Is<Predicate<MethodInfo>>(predicate => predicate(somePropertySetter) && (!predicate(somePropertyGetter))),
+                    It.Is<ILock>(theLock => generatedLocks.Contains(theLock)))
+                ).Returns(proxyMock.Object);
+
+            Func<object, ILock> lockFactory = obj =>
+            {
+                var theLock = Mock.Of<ILock>();
+                generatedLocks.Add(theLock);
+                return theLock;
+            };
+
+            var proxyBuilder = CreateThreadSafeProxyBuilder(testMock.Object, lockFactory);
+
+            var proxy = proxyBuilder.ForMembers(somePropertySetter).WithThreadSafeProxyFactory(threadSafeProxyFactoryMock.Object).Build();
+
+            proxy.Should().Be(proxyMock.Object);
+        }
 
     }
 }

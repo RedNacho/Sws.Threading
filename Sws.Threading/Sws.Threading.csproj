@@ -49,6 +49,7 @@
   <ItemGroup>
     <Compile Include="DependencyResolver.cs" />
     <Compile Include="ILock.cs" />
+    <Compile Include="IThreadSafeProxyFactory.cs" />
     <Compile Include="MonitorLock.cs" />
     <Compile Include="Extensions\ObjectExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

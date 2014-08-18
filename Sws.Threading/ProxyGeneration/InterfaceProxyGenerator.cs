@@ -6,7 +6,7 @@ using Castle.DynamicProxy;
 
 namespace Sws.Threading.ProxyGeneration
 {
-    internal class InterfaceProxyGenerator : CastleProxyGenerator
+    public class InterfaceProxyGenerator : CastleProxyGenerator
     {
         public InterfaceProxyGenerator(ProxyGenerator proxyGenerator) : base(proxyGenerator) { }
 
@@ -15,7 +15,7 @@ namespace Sws.Threading.ProxyGeneration
             return typeof(TProxy).IsInterface;
         }
 
-        public override TProxy InvokeCastleProxyGenerator<TProxy>(ProxyGenerator proxyGenerator, TProxy target, IInterceptor interceptor)
+        protected override TProxy InvokeCastleProxyGenerator<TProxy>(ProxyGenerator proxyGenerator, TProxy target, IInterceptor interceptor)
         {
             return proxyGenerator.CreateInterfaceProxyWithTarget<TProxy>(target, interceptor);
         }

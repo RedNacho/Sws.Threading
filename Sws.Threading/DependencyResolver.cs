@@ -12,19 +12,19 @@ namespace Sws.Threading
     {
         internal class ThreadSafeProxyBuilderDependencies
         {
-            private readonly ThreadSafeProxyFactory _threadSafeProxyFactory;
+            private readonly IThreadSafeProxyFactory _defaultThreadSafeProxyFactory;
             private readonly MethodInfoExtractor _methodInfoExtractor;
             private readonly Func<object, ILock> _defaultLockFactory;
 
-            public ThreadSafeProxyFactory ThreadSafeProxyFactory { get { return _threadSafeProxyFactory; } }
+            public IThreadSafeProxyFactory DefaultThreadSafeProxyFactory { get { return _defaultThreadSafeProxyFactory; } }
             public MethodInfoExtractor MethodInfoExtractor { get { return _methodInfoExtractor; } }
             public Func<object, ILock> DefaultLockFactory { get { return _defaultLockFactory; } }
 
-            public ThreadSafeProxyBuilderDependencies(ThreadSafeProxyFactory threadSafeProxyFactory, MethodInfoExtractor methodInfoExtractor, Func<object, ILock> defaultLockFactory)
+            public ThreadSafeProxyBuilderDependencies(IThreadSafeProxyFactory defaultThreadSafeProxyFactory, MethodInfoExtractor methodInfoExtractor, Func<object, ILock> defaultLockFactory)
             {
-                if (threadSafeProxyFactory == null)
+                if (defaultThreadSafeProxyFactory == null)
                 {
-                    throw new ArgumentNullException("threadSafeProxyFactory");
+                    throw new ArgumentNullException("defaultThreadSafeProxyFactory");
                 }
 
                 if (methodInfoExtractor == null)
@@ -37,7 +37,7 @@ namespace Sws.Threading
                     throw new ArgumentNullException("defaultLockFactory");
                 }
 
-                _threadSafeProxyFactory = threadSafeProxyFactory;
+                _defaultThreadSafeProxyFactory = defaultThreadSafeProxyFactory;
                 _methodInfoExtractor = methodInfoExtractor;
                 _defaultLockFactory = defaultLockFactory;
             }
@@ -47,13 +47,13 @@ namespace Sws.Threading
         public static ThreadSafeProxyBuilderDependencies GetThreadSafeProxyBuilderDependencies()
         {
             return new ThreadSafeProxyBuilderDependencies(
-                GetThreadSafeProxyFactory(),
+                GetDefaultThreadSafeProxyFactory(),
                 GetMethodInfoExtractor(),
                 GetDefaultLockFactory()
             );
         }
 
-        private static ThreadSafeProxyFactory GetThreadSafeProxyFactory()
+        private static IThreadSafeProxyFactory GetDefaultThreadSafeProxyFactory()
         {
             var castleProxyGenerator = new ProxyGenerator();
 

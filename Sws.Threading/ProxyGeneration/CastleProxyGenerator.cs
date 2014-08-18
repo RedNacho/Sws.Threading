@@ -6,7 +6,7 @@ using Castle.DynamicProxy;
 
 namespace Sws.Threading.ProxyGeneration
 {
-    internal abstract class CastleProxyGenerator : IProxyGenerator
+    public abstract class CastleProxyGenerator : IProxyGenerator
     {
         private readonly ProxyGenerator _proxyGenerator;
 
@@ -22,7 +22,7 @@ namespace Sws.Threading.ProxyGeneration
 
         public abstract bool CanProxy<TProxy>() where TProxy : class;
 
-        public abstract TProxy InvokeCastleProxyGenerator<TProxy>(ProxyGenerator proxyGenerator, TProxy target, IInterceptor interceptor) where TProxy : class;
+        protected abstract TProxy InvokeCastleProxyGenerator<TProxy>(ProxyGenerator proxyGenerator, TProxy target, IInterceptor interceptor) where TProxy : class;
 
         public TProxy Generate<TProxy>(TProxy target, IInterceptor interceptor) where TProxy : class
         {
