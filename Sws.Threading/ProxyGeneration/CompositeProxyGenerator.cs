@@ -14,6 +14,11 @@ namespace Sws.Threading.ProxyGeneration
 
         public CompositeProxyGenerator(params IProxyGenerator[] components)
         {
+            if (components == null)
+            {
+                throw new ArgumentNullException("components");
+            }
+
             _components = components;
         }
 
