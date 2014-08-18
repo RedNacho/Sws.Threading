@@ -226,7 +226,8 @@ namespace Sws.Threading
         }
 
         /// <summary>
-        /// Specifies a lock factory to use when creating thread locks.
+        /// Specifies a lock factory to use when creating thread locks.  Current instance can be
+        /// retrieved through the LockFactory property, e.g. for decorating.
         /// </summary>
         /// <param name="lockFactory"></param>
         /// <returns></returns>
@@ -242,6 +243,13 @@ namespace Sws.Threading
 
             return this;
         }
+
+        /// <summary>
+        /// Specifies an IThreadSafeProxyFactory to use to create the proxy when the Build() method is invoked.  Current instance can be
+        /// retrieved through the ThreadSafeProxyFactory property, e.g. for decorating.
+        /// </summary>
+        /// <param name="threadSafeProxyFactory"></param>
+        /// <returns></returns>
 
         public ThreadSafeProxyBuilder<TProxy> WithThreadSafeProxyFactory(IThreadSafeProxyFactory threadSafeProxyFactory)
         {
