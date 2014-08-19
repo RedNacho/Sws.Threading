@@ -28,3 +28,23 @@ Finally, you can override the synchronisation mechanism itself as follows:
 obj = obj.ConfigureThreadSafeProxy().WithLockFactory(lockingObject => new MyLockImplementation(lockingObject));
 
 See the Sws.Threading.Demo solution for an example of the extension methods in use.
+
+Builder Quick Start
+===================
+
+obj.ConfigureThreadSafeProxy()
+  .[Configuration Method Call]
+  .[Configuration Method Call]
+  .Build();
+
+No method calls - equivalent to calling the obj.ThreadSafeProxy() extension method.  Effectively wraps the code for every virtual method/property with the "lock" keyword called on a dedicated locking object.
+
+.ForMember/ForMembers(...) - specifies that locking will be applied to the specified properties/methods.  Other methods will be left as-is.  ForSetter and ForGetter can also be used with property lambda expressions to restrict the locking to the setter or the getter only.  You can call this any number of times to include more members.
+
+.Except().ForMember/ForMembers(...) - as above, but specifies that locking will NOT be applied to the specified properties/methods.
+
+.WithLockingObject(lockingObject) - causes locks to be created on a specific object, ie "lock (lockingObject) { }".  If you don't specify this, each call to Build() uses its own dedicated locking object.  WithLockingObject is primarily intended to allow the same object to be locked across multiple proxies.
+
+.WithLockFactory(lockFactory) - causes all subsequent calls to Build() to create a lock on the locking object with the supplied lockFactory (ie replacing the "lock" keyword with something else).  You must supply a factory method because the locking object itself may vary, but the method will only be invoked once for each Build() call - one ILock instance will be used across the entire proxy.
+
+.WithThreadSafeProxyFactory(threadSafeProxyFactory) - allows the underlying mechanism for creating thread-safe proxies to be swapped out (not really expected usage, provided for extensibility).  Standard implementation is ThreadSafeProxyFactory using Castle Dynamic Proxy for proxy generation.
