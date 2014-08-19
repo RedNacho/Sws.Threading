@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Castle.DynamicProxy;
+using Sws.Threading.Interception;
 using Sws.Threading.ProxyGeneration;
 using Sws.Threading.Reflection;
 
@@ -57,7 +58,9 @@ namespace Sws.Threading
         {
             var castleProxyGenerator = new ProxyGenerator();
 
-            return new ThreadSafeProxyFactory(new CompositeProxyGenerator(
+            return new ThreadSafeProxyFactory(
+                new ThreadSafeInterceptorFactory(),
+                new CompositeProxyGenerator(
                     new InterfaceProxyGenerator(castleProxyGenerator),
                     new ClassProxyGenerator(castleProxyGenerator)
                 ));
