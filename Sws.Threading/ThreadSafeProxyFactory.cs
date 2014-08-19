@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using Castle.DynamicProxy;
+using Sws.Threading.Interception;
 using Sws.Threading.ProxyGeneration;
 
 namespace Sws.Threading
@@ -13,14 +14,23 @@ namespace Sws.Threading
 
         private readonly IProxyGenerator _proxyGenerator;
 
-        public ThreadSafeProxyFactory(IProxyGenerator proxyGenerator)
+        private readonly IThreadSafeInterceptorFactory _threadSafeInterceptorFactory;
+
+        public ThreadSafeProxyFactory(IThreadSafeInterceptorFactory threadSafeInterceptorFactory, IProxyGenerator proxyGenerator)
         {
             if (proxyGenerator == null)
             {
                 throw new ArgumentNullException("proxyGenerator");
             }
 
+            if (threadSafeInterceptorFactory == null)
+            {
+                throw new ArgumentNullException("threadSafeInterceptorFactory");
+            }
+
             _proxyGenerator = proxyGenerator;
+
+            _threadSafeInterceptorFactory = threadSafeInterceptorFactory;
         }
 
         public IProxyGenerator ProxyGenerator
@@ -50,59 +60,10 @@ namespace Sws.Threading
                 throw new ArgumentException(string.Format("Proxy generator does not support this type of object: {0}", typeof(TProxy).FullName));
             }
 
-            var interceptor = new ThreadSafeInterceptor(theLock, methodIncluder);
+            var interceptor = _threadSafeInterceptorFactory.CreateInterceptor(theLock, methodIncluder);
 
             return _proxyGenerator.Generate(obj, interceptor);
         }
         
-        private class ThreadSafeInterceptor : IInterceptor
-        {
-
-            private readonly ILock _lock;
-            private readonly Predicate<MethodInfo> _methodIncluder;
-
-            public ThreadSafeInterceptor(ILock theLock, Predicate<MethodInfo> methodIncluder)
-            {
-                if (theLock == null)
-                {
-                    throw new ArgumentNullException("theLock");
-                }
-
-                if (methodIncluder == null)
-                {
-                    throw new ArgumentNullException("methodIncluder");
-                }
-
-                _lock = theLock;
-                _methodIncluder = methodIncluder;
-            }
-
-            public void Intercept(IInvocation invocation)
-            {
-                bool lockEntered = false;
-
-                try
-                {
-                    var enterLock = _methodIncluder(invocation.Method);
-
-                    if (enterLock)
-                    {
-                        _lock.Enter();
-                        lockEntered = true;
-                    }
-
-                    invocation.Proceed();
-                }
-                finally
-                {
-                    if (lockEntered)
-                    {
-                        _lock.Exit();
-                    }
-                }
-            }
-
-        }
-
     }
 }
