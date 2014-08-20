@@ -38,6 +38,11 @@ namespace Sws.Threading
             get { return _proxyGenerator; }
         }
 
+        public IThreadSafeInterceptorFactory ThreadSafeInterceptorFactory
+        {
+            get { return _threadSafeInterceptorFactory; }
+        }
+
         public TProxy CreateProxy<TProxy>(TProxy obj, Predicate<MethodInfo> methodIncluder, ILock theLock) where TProxy : class
         {
             if (obj == null)
