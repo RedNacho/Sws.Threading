@@ -1,11 +1,14 @@
 packages/Castle.Core.3.3.0
 packages/FluentAssertions.3.1.229
 packages/Moq.4.2.1408.0717
+packages/Ninject.3.2.2.0
 Sws.Threading.Demo/bin
 Sws.Threading.Demo/obj
 Sws.Threading.Tests/bin
 Sws.Threading.Tests/obj
 Sws.Threading/bin
 Sws.Threading/obj
+Sws.Threading.Nindapter.Example/bin
+Sws.Threading.Nindapter.Example/obj
 *.suo
 TestResults
