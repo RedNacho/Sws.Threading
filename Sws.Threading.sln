@@ -21,6 +21,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{E80A7B
 		.nuget\NuGet.targets = .nuget\NuGet.targets
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sws.Threading.Nindapter.Example", "Sws.Threading.Nindapter.Example\Sws.Threading.Nindapter.Example.csproj", "{4C92DBD9-7498-4527-ADAB-4F7010CB5FDD}"
+EndProject
 Global
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = Sws.Threading.vsmdi
@@ -64,6 +66,16 @@ Global
 		{ED1C85DA-5C27-4326-8871-C18633E97118}.Release|Mixed Platforms.Build.0 = Release|x86
 		{ED1C85DA-5C27-4326-8871-C18633E97118}.Release|x86.ActiveCfg = Release|x86
 		{ED1C85DA-5C27-4326-8871-C18633E97118}.Release|x86.Build.0 = Release|x86
+		{4C92DBD9-7498-4527-ADAB-4F7010CB5FDD}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{4C92DBD9-7498-4527-ADAB-4F7010CB5FDD}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{4C92DBD9-7498-4527-ADAB-4F7010CB5FDD}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{4C92DBD9-7498-4527-ADAB-4F7010CB5FDD}.Debug|x86.ActiveCfg = Debug|x86
+		{4C92DBD9-7498-4527-ADAB-4F7010CB5FDD}.Debug|x86.Build.0 = Debug|x86
+		{4C92DBD9-7498-4527-ADAB-4F7010CB5FDD}.Release|Any CPU.ActiveCfg = Release|x86
+		{4C92DBD9-7498-4527-ADAB-4F7010CB5FDD}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{4C92DBD9-7498-4527-ADAB-4F7010CB5FDD}.Release|Mixed Platforms.Build.0 = Release|x86
+		{4C92DBD9-7498-4527-ADAB-4F7010CB5FDD}.Release|x86.ActiveCfg = Release|x86
+		{4C92DBD9-7498-4527-ADAB-4F7010CB5FDD}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
