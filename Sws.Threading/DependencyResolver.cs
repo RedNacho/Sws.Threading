@@ -59,7 +59,9 @@ namespace Sws.Threading
             var castleProxyGenerator = new ProxyGenerator();
 
             return new ThreadSafeProxyFactory(
-                new ThreadSafeInterceptorFactory(),
+                new ThreadSafeInterceptorWithLockControllerFactory(
+                    () => new SafeFailingLockController(new UnsafeFailingLockController(null))
+                ),
                 new CompositeProxyGenerator(
                     new InterfaceProxyGenerator(castleProxyGenerator),
                     new ClassProxyGenerator(castleProxyGenerator)
@@ -73,7 +75,7 @@ namespace Sws.Threading
 
         private static Func<object, ILock> GetDefaultLockFactory()
         {
-            return lockingObject => new MonitorLock(lockingObject);
+            return lockingObject => new SafeFailingMonitorLock(lockingObject);
         }
 
     }

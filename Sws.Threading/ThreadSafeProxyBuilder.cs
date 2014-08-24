@@ -245,6 +245,26 @@ namespace Sws.Threading
         }
 
         /// <summary>
+        /// Specifies a lock factory to use when creating thread locks.  Current instance can be
+        /// retrieved through the LockFactory property, e.g. for decorating.  This overload
+        /// is here to encourage usage of ISafeFailingLocks.
+        /// </summary>
+        /// <param name="lockFactory"></param>
+        /// <returns></returns>
+
+        public ThreadSafeProxyBuilder<TProxy> WithLockFactory(Func<object, ISafeFailingLock> lockFactory)
+        {
+            if (lockFactory == null)
+            {
+                throw new ArgumentNullException("lockFactory");
+            }
+
+            _lockFactory = lockFactory;
+
+            return this;
+        }
+
+        /// <summary>
         /// Specifies an IThreadSafeProxyFactory to use to create the proxy when the Build() method is invoked.  Current instance can be
         /// retrieved through the ThreadSafeProxyFactory property, e.g. for decorating.
         /// </summary>

@@ -62,7 +62,7 @@ namespace Sws.Threading
 
             if (!_proxyGenerator.CanProxy<TProxy>())
             {
-                throw new ArgumentException(string.Format("Proxy generator does not support this type of object: {0}", typeof(TProxy).FullName));
+                throw new ArgumentException(string.Format(ExceptionMessages.ObjectNotSupportedByProxyGeneratorFormat, typeof(TProxy).FullName));
             }
 
             var interceptor = _threadSafeInterceptorFactory.CreateInterceptor(theLock, methodIncluder);
