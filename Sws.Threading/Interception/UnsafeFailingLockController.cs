@@ -7,7 +7,7 @@ namespace Sws.Threading.Interception
 {
     public class UnsafeFailingLockController : ChainableLockControllerBase
     {
-        public UnsafeFailingLockController(ChainableLockControllerBase next)
+        public UnsafeFailingLockController(ILockController next)
             : base(next)
         {
         }

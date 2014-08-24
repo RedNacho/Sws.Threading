@@ -7,9 +7,9 @@ namespace Sws.Threading.Interception
 {
     public abstract class ChainableLockControllerBase : ILockController
     {
-        private readonly ChainableLockControllerBase _next;
+        private readonly ILockController _next;
 
-        public ChainableLockControllerBase(ChainableLockControllerBase next)
+        public ChainableLockControllerBase(ILockController next)
         {
             _next = next;
         }
