@@ -6,15 +6,13 @@ using System.Threading;
 
 namespace Sws.Threading
 {
-
-    /// <summary>
-    /// Implementation of a lock which uses System.Threading.Monitor.
-    /// </summary>
-    public class MonitorLock : ILock
+    public class SafeFailingMonitorLock : MonitorLock, ISafeFailingLock
     {
+
         private readonly object _lockingObject;
 
-        public MonitorLock(object lockingObject)
+        public SafeFailingMonitorLock(object lockingObject)
+            : base(lockingObject)
         {
             if (lockingObject == null)
             {
@@ -23,15 +21,11 @@ namespace Sws.Threading
 
             _lockingObject = lockingObject;
         }
-        
-        public void Enter()
+
+        public void Enter(ref bool lockTaken)
         {
-            Monitor.Enter(_lockingObject);
+            Monitor.Enter(_lockingObject, ref lockTaken);
         }
 
-        public void Exit()
-        {
-            Monitor.Exit(_lockingObject);
-        }
     }
 }

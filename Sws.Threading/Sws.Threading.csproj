@@ -48,11 +48,24 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DependencyResolver.cs" />
+    <Compile Include="ExceptionMessages.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ExceptionMessages.resx</DependentUpon>
+    </Compile>
     <Compile Include="ILock.cs" />
+    <Compile Include="Interception\ILockController.cs" />
+    <Compile Include="Interception\ChainableLockControllerBase.cs" />
     <Compile Include="Interception\IThreadSafeInterceptorFactory.cs" />
+    <Compile Include="Interception\SafeFailingLockController.cs" />
+    <Compile Include="Interception\ThreadSafeInterceptorWithLockControllerFactory.cs" />
     <Compile Include="Interception\ThreadSafeInterceptor.cs" />
     <Compile Include="Interception\ThreadSafeInterceptorFactory.cs" />
+    <Compile Include="Interception\UnsafeFailingLockController.cs" />
+    <Compile Include="ISafeFailingLock.cs" />
     <Compile Include="IThreadSafeProxyFactory.cs" />
+    <Compile Include="LockFailureException.cs" />
+    <Compile Include="LockState.cs" />
     <Compile Include="MonitorLock.cs" />
     <Compile Include="Extensions\ObjectExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -62,11 +75,18 @@
     <Compile Include="ProxyGeneration\InterfaceProxyGenerator.cs" />
     <Compile Include="ProxyGeneration\IProxyGenerator.cs" />
     <Compile Include="Reflection\MethodInfoExtractor.cs" />
+    <Compile Include="SafeFailingMonitorLock.cs" />
     <Compile Include="ThreadSafeProxyBuilder.cs" />
     <Compile Include="ThreadSafeProxyFactory.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="ExceptionMessages.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>ExceptionMessages.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />

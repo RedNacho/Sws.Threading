@@ -12,9 +12,15 @@ namespace Sws.Threading.Interception
     {
 
         private readonly ILock _lock;
+        private readonly ILockController _lockController;
         private readonly Predicate<MethodInfo> _methodIncluder;
 
         public ThreadSafeInterceptor(ILock theLock, Predicate<MethodInfo> methodIncluder)
+            : this(theLock, methodIncluder, new SafeFailingLockController(new UnsafeFailingLockController(null)))
+        {
+        }
+
+        public ThreadSafeInterceptor(ILock theLock, Predicate<MethodInfo> methodIncluder, ILockController lockController)
         {
             if (theLock == null)
             {
@@ -26,10 +32,16 @@ namespace Sws.Threading.Interception
                 throw new ArgumentNullException("methodIncluder");
             }
 
+            if (lockController == null)
+            {
+                throw new ArgumentNullException("lockController");
+            }
+
             _lock = theLock;
+            _lockController = lockController;
             _methodIncluder = methodIncluder;
         }
-
+        
         public void Intercept(IInvocation invocation)
         {
             bool lockEntered = false;
@@ -40,8 +52,12 @@ namespace Sws.Threading.Interception
 
                 if (enterLock)
                 {
-                    _lock.Enter();
-                    lockEntered = true;
+                    _lockController.Enter(_lock, ref lockEntered);
+
+                    if (!lockEntered)
+                    {
+                        throw new LockFailureException(ExceptionMessages.LockFailure);
+                    }
                 }
 
                 invocation.Proceed();
@@ -50,7 +66,7 @@ namespace Sws.Threading.Interception
             {
                 if (lockEntered)
                 {
-                    _lock.Exit();
+                    _lockController.Exit(_lock);
                 }
             }
         }

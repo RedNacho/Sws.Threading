@@ -94,7 +94,7 @@ namespace Sws.Threading.Tests
             Func<object, ILock> lockFactory = obj =>
             {
                 var lockMock = new Mock<ILock>();
-
+                
                 lockMock.Setup(lck => lck.Enter()).Callback(() => lockEntryCount++);
                 lockMock.Setup(lck => lck.Exit()).Callback(() => lockEntryCount--);
 
@@ -768,6 +768,103 @@ namespace Sws.Threading.Tests
             var proxy = proxyBuilder.ForMembers(somePropertySetter).WithThreadSafeProxyFactory(threadSafeProxyFactoryMock.Object).Build();
 
             proxy.Should().Be(proxyMock.Object);
+        }
+
+        private class SafeFailingLockMock : ISafeFailingLock
+        {
+
+            private readonly bool _setLockTaken;
+            private readonly Action _enterLock;
+            private readonly Action _exitLock;
+
+            public SafeFailingLockMock(bool setLockTaken, Action enterLock, Action exitLock)
+            {
+                _setLockTaken = setLockTaken;
+                _enterLock = enterLock;
+                _exitLock = exitLock;
+            }
+
+            public void Enter(ref bool lockTaken)
+            {
+                _enterLock();
+                lockTaken = _setLockTaken;
+            }
+
+            public void Enter()
+            {
+                _enterLock();
+            }
+
+            public void Exit()
+            {
+                _exitLock();
+            }
+
+        }
+
+        [TestMethod]
+        public void ThreadSafeProxyThrowsExceptionIfSafeFailingLockDoesNotSetLockTaken()
+        {
+            const int testParameter = 12345;
+
+            var testMock = new Mock<ITest>();
+
+            Func<object, ILock> lockFactory = obj =>
+            {
+                return new SafeFailingLockMock(false, () => { }, () => { });
+            };
+
+            var proxyBuilder = CreateThreadSafeProxyBuilder(testMock.Object, lockFactory);
+
+            var proxy = proxyBuilder.Build();
+
+            proxy.Invoking(p => p.SomeAction(testParameter)).ShouldThrow<LockFailureException>();
+        }
+
+        [TestMethod]
+        public void ThreadSafeProxyDoesNotUnlockIfSafeFailingLockDoesNotSetLockTaken()
+        {
+            const int testParameter = 12345;
+
+            var testMock = new Mock<ITest>();
+
+            bool triedToUnlock = false;
+
+            Func<object, ILock> lockFactory = obj =>
+            {
+                return new SafeFailingLockMock(false, () => { }, () => triedToUnlock = true);
+            };
+
+            var proxyBuilder = CreateThreadSafeProxyBuilder(testMock.Object, lockFactory);
+
+            var proxy = proxyBuilder.Build();
+
+            proxy.Invoking(p => p.SomeAction(testParameter)).ShouldThrow<LockFailureException>();
+
+            triedToUnlock.Should().BeFalse();
+        }
+
+        [TestMethod]
+        public void ThreadSafeProxyUnlocksIfSafeFailingLockSetsLockTaken()
+        {
+            const int testParameter = 12345;
+
+            var testMock = new Mock<ITest>();
+
+            bool triedToUnlock = false;
+
+            Func<object, ILock> lockFactory = obj =>
+            {
+                return new SafeFailingLockMock(true, () => { }, () => triedToUnlock = true);
+            };
+
+            var proxyBuilder = CreateThreadSafeProxyBuilder(testMock.Object, lockFactory);
+
+            var proxy = proxyBuilder.Build();
+
+            proxy.Invoking(p => p.SomeAction(testParameter)).ShouldNotThrow<LockFailureException>();
+
+            triedToUnlock.Should().BeTrue();
         }
 
     }
