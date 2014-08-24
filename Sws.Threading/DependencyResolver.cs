@@ -54,17 +54,17 @@ namespace Sws.Threading
             );
         }
 
+        private static ProxyGenerator CastleProxyGenerator = new ProxyGenerator();
+
         private static IThreadSafeProxyFactory GetDefaultThreadSafeProxyFactory()
         {
-            var castleProxyGenerator = new ProxyGenerator();
-
             return new ThreadSafeProxyFactory(
                 new ThreadSafeInterceptorWithLockControllerFactory(
                     () => new SafeFailingLockController(new UnsafeFailingLockController(null))
                 ),
                 new CompositeProxyGenerator(
-                    new InterfaceProxyGenerator(castleProxyGenerator),
-                    new ClassProxyGenerator(castleProxyGenerator)
+                    new InterfaceProxyGenerator(CastleProxyGenerator),
+                    new ClassProxyGenerator(CastleProxyGenerator)
                 ));
         }
 
