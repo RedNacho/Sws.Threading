@@ -62,7 +62,7 @@ namespace Sws.Threading.Tests
         public void ThreadSafeProxyWrapsClassMethod()
         {
             const int testParameter = 12345;
-            
+
             var testMock = new Mock<Test>();
 
             var someActionCount = 0;
@@ -82,7 +82,7 @@ namespace Sws.Threading.Tests
         public void ThreadSafeProxyInLockWhenInterfaceMethodCalled()
         {
             const int testParameter = 12345;
-            
+
             var testMock = new Mock<ITest>();
 
             int? lockEntryCountDuringCallback = null;
@@ -94,7 +94,7 @@ namespace Sws.Threading.Tests
             Func<object, ILock> lockFactory = obj =>
             {
                 var lockMock = new Mock<ILock>();
-                
+
                 lockMock.Setup(lck => lck.Enter()).Callback(() => lockEntryCount++);
                 lockMock.Setup(lck => lck.Exit()).Callback(() => lockEntryCount--);
 
@@ -153,7 +153,7 @@ namespace Sws.Threading.Tests
         public void ThreadSafeProxyOutOfLockWhenInterfaceMethodExits()
         {
             const int testParameter = 12345;
-            
+
             var testMock = new Mock<ITest>();
 
             int lockEntryCount = 0;
@@ -181,7 +181,7 @@ namespace Sws.Threading.Tests
         public void ThreadSafeProxyOutOfLockWhenInterfaceMethodThrowsException()
         {
             const int testParameter = 12345;
-            
+
             var testMock = new Mock<ITest>();
 
             testMock.Setup(test => test.SomeAction(testParameter)).Throws(
@@ -703,7 +703,7 @@ namespace Sws.Threading.Tests
 
             lockEntryCountDuringCallback.Should().Be(1);
         }
-        
+
         [TestMethod]
         public void ThreadSafeProxyNotInLockOnWriteWhenInterfaceMemberSpecifiedInExceptForSetterLambdaExpression()
         {
@@ -786,8 +786,8 @@ namespace Sws.Threading.Tests
 
             public void Enter(ref bool lockTaken)
             {
-                _enterLock();
                 lockTaken = _setLockTaken;
+                _enterLock();
             }
 
             public void Enter()
@@ -867,5 +867,50 @@ namespace Sws.Threading.Tests
             triedToUnlock.Should().BeTrue();
         }
 
+        [TestMethod]
+        public void ThreadSafeProxyUnlocksIfSafeFailingLockSetsLockTakenBeforeThrowingException()
+        {
+            const int testParameter = 12345;
+
+            var testMock = new Mock<ITest>();
+
+            bool triedToUnlock = false;
+
+            Func<object, ILock> lockFactory = obj =>
+            {
+                return new SafeFailingLockMock(true, () => { throw new Exception("Problem!"); }, () => triedToUnlock = true);
+            };
+
+            var proxyBuilder = CreateThreadSafeProxyBuilder(testMock.Object, lockFactory);
+
+            var proxy = proxyBuilder.Build();
+
+            proxy.Invoking(p => p.SomeAction(testParameter)).ShouldThrow<Exception>();
+
+            triedToUnlock.Should().BeTrue();
+        }
+
+        [TestMethod]
+        public void ThreadSafeProxyDoesNotUnlockIfSafeFailingLockDoesNotSetLockTakenBeforeThrowingException()
+        {
+            const int testParameter = 12345;
+
+            var testMock = new Mock<ITest>();
+
+            bool triedToUnlock = false;
+
+            Func<object, ILock> lockFactory = obj =>
+            {
+                return new SafeFailingLockMock(false, () => { throw new Exception("Problem!"); }, () => triedToUnlock = true);
+            };
+
+            var proxyBuilder = CreateThreadSafeProxyBuilder(testMock.Object, lockFactory);
+
+            var proxy = proxyBuilder.Build();
+
+            proxy.Invoking(p => p.SomeAction(testParameter)).ShouldThrow<Exception>();
+
+            triedToUnlock.Should().BeFalse();
+        }
     }
 }
