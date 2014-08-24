@@ -65,7 +65,6 @@
     <Compile Include="ISafeFailingLock.cs" />
     <Compile Include="IThreadSafeProxyFactory.cs" />
     <Compile Include="LockFailureException.cs" />
-    <Compile Include="LockState.cs" />
     <Compile Include="MonitorLock.cs" />
     <Compile Include="Extensions\ObjectExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

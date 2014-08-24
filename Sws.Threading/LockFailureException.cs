@@ -6,7 +6,7 @@ using System.Runtime.Serialization;
 
 namespace Sws.Threading
 {
-    public class LockFailureException : Exception, ISerializable
+    public class LockFailureException : Exception
     {
 
         public LockFailureException() : base() { }
@@ -16,8 +16,6 @@ namespace Sws.Threading
         public LockFailureException(SerializationInfo info, StreamingContext context) : base(info, context) { }
 
         public LockFailureException(string message, Exception innerException) : base(message, innerException) { }
-
-        public void GetObjectData(SerializationInfo info, StreamingContext context) { }
 
     }
 }
