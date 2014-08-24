@@ -12,36 +12,24 @@ namespace Sws.Threading.Ninject
 
     public interface IContainer
     {
-        int Value1 { get; }
-        int Value2 { get; }
         void UpdateValues();
     }
 
     public class UnsafeContainer : IContainer
     {
-        public int Value1
-        {
-            get;
-            private set;
-        }
-
-        public int Value2
-        {
-            get;
-            private set;
-        }
+        private int _value1, _value2;
 
         public void UpdateValues()
         {
-            if (Value1 != Value2)
+            if (_value1 != _value2)
             {
                 throw new Exception("Values don't match!  This method is not thread-safe!");
             }
 
-            var value = Value1 + 1;
+            var value = _value1 + 1;
 
-            this.Value1 = value;
-            this.Value2 = value;
+            _value1 = value;
+            _value2 = value;
         }
     }
 
