@@ -11,17 +11,17 @@ namespace Sws.Threading.Interception
         {
         }
 
-        protected override bool CanControl(ILock theLock)
+        protected override bool CanControlWithoutChaining(ILock theLock)
         {
             return theLock is ISafeFailingLock;
         }
 
-        protected override void DoEnter(ILock theLock, ref bool lockTaken)
+        protected override void EnterWithoutChaining(ILock theLock, ref bool lockTaken)
         {
             (theLock as ISafeFailingLock).Enter(ref lockTaken);
         }
 
-        protected override void DoExit(ILock theLock)
+        protected override void ExitWithoutChaining(ILock theLock)
         {
             theLock.Exit();
         }

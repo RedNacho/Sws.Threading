@@ -16,9 +16,9 @@ namespace Sws.Threading.Interception
 
         public void Enter(ILock theLock, ref bool lockTaken)
         {
-            if (CanControl(theLock))
+            if (CanControlWithoutChaining(theLock))
             {
-                DoEnter(theLock, ref lockTaken);
+                EnterWithoutChaining(theLock, ref lockTaken);
             }
             else
             {
@@ -33,25 +33,30 @@ namespace Sws.Threading.Interception
 
         public void Exit(ILock theLock)
         {
-            if (CanControl(theLock))
+            if (CanControlWithoutChaining(theLock))
             {
-                DoExit(theLock);
+                ExitWithoutChaining(theLock);
             }
             else
             {
                 if (_next == null)
                 {
-                    throw new ArgumentException(ExceptionMessages.LockNotSupportedByLockController);
+                    throw new ArgumentException(ExceptionMessages.LockNotSupportedByLockController, "theLock");
                 }
 
                 _next.Exit(theLock);
             }
         }
 
-        protected abstract bool CanControl(ILock theLock);
+        public bool CanControl(ILock theLock)
+        {
+            return CanControlWithoutChaining(theLock) || (_next != null && _next.CanControl(theLock)); 
+        }
 
-        protected abstract void DoEnter(ILock theLock, ref bool lockTaken);
+        protected abstract bool CanControlWithoutChaining(ILock theLock);
 
-        protected abstract void DoExit(ILock theLock);
+        protected abstract void EnterWithoutChaining(ILock theLock, ref bool lockTaken);
+
+        protected abstract void ExitWithoutChaining(ILock theLock);
     }
 }

@@ -38,6 +38,11 @@ namespace Sws.Threading.Interception
                 throw new ArgumentNullException("lockController");
             }
 
+            if (!lockController.CanControl(theLock))
+            {
+                throw new ArgumentException(ExceptionMessages.LockNotSupportedByLockController, "lockController");
+            }
+
             _lock = theLock;
             _lockController = lockController;
             _methodIncluder = methodIncluder;
