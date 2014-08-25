@@ -29,10 +29,7 @@ namespace Sws.Threading.Reflection
         {
             return ExtractMethods(
                 declaringType,
-                declaringType
-                    .GetMembers(BindingFlags.Public | BindingFlags.Instance)
-                    .Where(memberInfo => memberSelector(memberInfo))
-                .ToArray());
+                GetMemberInfosForDeclaringType(declaringType, memberSelector).ToArray());
         }
 
         private IEnumerable<MethodInfo> ExtractGetters(Type declaringType, MemberInfo[] memberInfos)
@@ -54,7 +51,7 @@ namespace Sws.Threading.Reflection
 
         private IEnumerable<MethodInfo> FilterMethodsForDeclaringType(Type declaringType, IEnumerable<MethodInfo> methodInfos)
         {
-            return methodInfos.Where(methodInfo => methodInfo.DeclaringType == declaringType);
+            return GetMethodInfosForDeclaringType(declaringType, methodInfo => methodInfos.Contains(methodInfo));
         }
 
         private IEnumerable<MethodInfo> GetGettersAndSetters(IEnumerable<PropertyInfo> propertyInfos)
@@ -86,57 +83,87 @@ namespace Sws.Threading.Reflection
 
         private IEnumerable<MemberInfo> ExtractMembers(Type declaringType, Expression expression)
         {
-            var visitor = new MemberInfoExpressionVisitor(declaringType);
+            var visitor = new MemberInfoExpressionVisitor();
 
             visitor.Visit(expression);
 
-            return visitor.MemberInfos;
+            return GetMemberInfosForDeclaringType(declaringType, memberInfo => visitor.MemberInfos.Contains(memberInfo));
         }
 
         private class MemberInfoExpressionVisitor : ExpressionVisitor
         {
 
-            private readonly Type _declaringType;
-
-            public MemberInfoExpressionVisitor(Type declaringType)
-            {
-                if (declaringType == null)
-                {
-                    throw new ArgumentNullException("declaringType");
-                }
-
-                _declaringType = declaringType;
-            }
-
             private List<MemberInfo> _memberInfos = new List<MemberInfo>();
 
             protected override Expression VisitMember(MemberExpression node)
             {
-                if (node.Member.DeclaringType == _declaringType)
-                {
-                    _memberInfos.Add(node.Member);
-                }
-
+                _memberInfos.Add(node.Member);
                 return base.VisitMember(node);
             }
 
             protected override Expression VisitMethodCall(MethodCallExpression node)
             {
-                if (node.Method.DeclaringType == _declaringType)
-                {
-                    _memberInfos.Add(node.Method);
-                }
-
+                _memberInfos.Add(node.Method);
                 return base.VisitMethodCall(node);
             }
 
             public IEnumerable<MemberInfo> MemberInfos
             {
-                get { return _memberInfos; }
+                get { return _memberInfos.Distinct(); }
             }
 
         }
 
+        private static IEnumerable<MemberInfo> GetMemberInfosForDeclaringType(Type type, Predicate<MemberInfo> filter)
+        {
+            return GetMemberInfosForDeclaringType<MemberInfo>(type,
+                t => t.GetMembers(BindingFlags.Public | BindingFlags.Instance), filter);
+        }
+
+        public static IEnumerable<MethodInfo> GetMethodInfosForDeclaringType(Type type, Predicate<MemberInfo> filter)
+        {
+            return GetMemberInfosForDeclaringType<MethodInfo>(type,
+                t => t.GetMethods(BindingFlags.Public | BindingFlags.Instance), filter);
+        }
+
+        private static IEnumerable<TMemberInfo> GetMemberInfosForDeclaringType<TMemberInfo>(Type type,
+            Func<Type, TMemberInfo[]> memberExtractor, Predicate<TMemberInfo> filter)
+        {
+            var visited = new List<Type>();
+
+            var waiting = new Queue<Type>();
+
+            waiting.Enqueue(type);
+
+            while (waiting.Count() > 0)
+            {
+                var nextType = waiting.Dequeue();
+
+                visited.Add(nextType);
+
+                foreach (var memberInfo in memberExtractor(nextType).Where(memberInfo => filter(memberInfo)))
+                {
+                    yield return memberInfo;
+                }
+
+                if (nextType.BaseType != null)
+                {
+                    if (!visited.Contains(nextType.BaseType))
+                    {
+                        waiting.Enqueue(nextType.BaseType);
+                    }
+                }
+
+                foreach (var implementedInterface in nextType.GetInterfaces())
+                {
+                    if (!visited.Contains(implementedInterface))
+                    {
+                        waiting.Enqueue(implementedInterface);
+                    }
+                }
+
+            }
+        }
 
     }
 }
