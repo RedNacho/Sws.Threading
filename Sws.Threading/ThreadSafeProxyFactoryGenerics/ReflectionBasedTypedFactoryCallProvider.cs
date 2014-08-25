@@ -9,7 +9,7 @@ namespace Sws.Threading.ThreadSafeProxyFactoryGenerics
     {
         private static Type GenericTypedFactoryCallType = typeof(TypedFactoryCall<>);
 
-        public TypedFactoryCall GetTypedThreadSafeProxyFactory(Type proxyType)
+        public TypedFactoryCall GetTypedFactoryCall(Type proxyType)
         {
             var typedFactoryCallType = GenericTypedFactoryCallType.MakeGenericType(proxyType);
             return Activator.CreateInstance(typedFactoryCallType) as TypedFactoryCall;

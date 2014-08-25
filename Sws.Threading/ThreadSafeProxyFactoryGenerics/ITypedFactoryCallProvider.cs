@@ -16,6 +16,6 @@ namespace Sws.Threading.ThreadSafeProxyFactoryGenerics
         /// </summary>
         /// <param name="proxyType"></param>
         /// <returns></returns>
-        TypedFactoryCall GetTypedThreadSafeProxyFactory(Type proxyType);
+        TypedFactoryCall GetTypedFactoryCall(Type proxyType);
     }
 }

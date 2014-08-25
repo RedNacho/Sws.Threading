@@ -213,7 +213,7 @@ namespace Sws.Threading
                 throw new ArgumentNullException("subject");
             }
 
-            if (!proxyType.IsAssignableFrom(subject.GetType()))
+            if (proxyType != typeof(TProxy) && (!proxyType.IsAssignableFrom(subject.GetType())))
             {
                 throw new ArgumentException(ExceptionMessages.SubjectCannotBeAssignedToProxyType);
             }
