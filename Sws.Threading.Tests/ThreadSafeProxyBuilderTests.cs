@@ -36,6 +36,11 @@ namespace Sws.Threading.Tests
             return new ThreadSafeProxyBuilder<TProxy>(subject).WithLockFactory(lockFactory);
         }
 
+        private ThreadSafeProxyBuilder<object> CreateDynamicThreadSafeProxyBuilder(object subject, Type proxyType, Func<object, ILock> lockFactory)
+        {
+            return new ThreadSafeProxyBuilder<object>(subject, proxyType).WithLockFactory(lockFactory);
+        }
+
         [TestMethod]
         public void ThreadSafeProxyWrapsInterfaceMethod()
         {
@@ -912,5 +917,170 @@ namespace Sws.Threading.Tests
 
             triedToUnlock.Should().BeFalse();
         }
+
+        [TestMethod]
+        public void DynamicThreadSafeProxyWrapsInterfaceMethod()
+        {
+            const int testParameter = 12345;
+            const int testResponse = 67890;
+
+            var testMock = new Mock<ITest>();
+
+            var someActionCount = 0;
+
+            testMock.Setup(test => test.SomeAction(testParameter)).Callback(() => someActionCount++).Returns(testResponse);
+
+            var proxyBuilder = CreateDynamicThreadSafeProxyBuilder(testMock.Object, typeof(ITest), CreateLockFactory());
+
+            var proxy = proxyBuilder.Build() as ITest;
+
+            var response = proxy.SomeAction(testParameter);
+
+            someActionCount.Should().Be(1);
+            response.Should().Be(testResponse);
+        }
+
+        [TestMethod]
+        public void DynamicThreadSafeProxyWrapsClassMethod()
+        {
+            const int testParameter = 12345;
+            const int testResponse = 67890;
+
+            var testMock = new Mock<Test>();
+
+            var someActionCount = 0;
+
+            testMock.Setup(test => test.SomeAction(testParameter)).Callback(() => someActionCount++).Returns(testResponse);
+
+            var proxyBuilder = CreateDynamicThreadSafeProxyBuilder(testMock.Object, typeof(Test), CreateLockFactory());
+
+            var proxy = proxyBuilder.Build() as Test;
+
+            var response = proxy.SomeAction(testParameter);
+
+            someActionCount.Should().Be(1);
+            response.Should().Be(testResponse);
+        }
+
+        [TestMethod]
+        public void DynamicThreadSafeProxyInLockWhenInterfaceMethodCalled()
+        {
+            const int testParameter = 12345;
+
+            var testMock = new Mock<ITest>();
+
+            int? lockEntryCountDuringCallback = null;
+
+            int lockEntryCount = 0;
+
+            testMock.Setup(test => test.SomeAction(testParameter)).Callback(() => lockEntryCountDuringCallback = lockEntryCount);
+
+            Func<object, ILock> lockFactory = obj =>
+            {
+                var lockMock = new Mock<ILock>();
+
+                lockMock.Setup(lck => lck.Enter()).Callback(() => lockEntryCount++);
+                lockMock.Setup(lck => lck.Exit()).Callback(() => lockEntryCount--);
+
+                return lockMock.Object;
+            };
+
+            var proxyBuilder = CreateDynamicThreadSafeProxyBuilder(testMock.Object, typeof(ITest), lockFactory);
+
+            var proxy = proxyBuilder.Build() as ITest;
+
+            proxy.SomeAction(testParameter);
+
+            lockEntryCountDuringCallback.Should().Be(1);
+        }
+
+        [TestMethod]
+        public void DynamicThreadSafeProxyOutOfLockWhenInterfaceMethodExits()
+        {
+            const int testParameter = 12345;
+
+            var testMock = new Mock<ITest>();
+
+            int lockEntryCount = 0;
+
+            Func<object, ILock> lockFactory = obj =>
+            {
+                var lockMock = new Mock<ILock>();
+
+                lockMock.Setup(lck => lck.Enter()).Callback(() => lockEntryCount++);
+                lockMock.Setup(lck => lck.Exit()).Callback(() => lockEntryCount--);
+
+                return lockMock.Object;
+            };
+
+            var proxyBuilder = CreateDynamicThreadSafeProxyBuilder(testMock.Object, typeof(ITest), lockFactory);
+
+            var proxy = proxyBuilder.Build() as ITest;
+
+            proxy.SomeAction(testParameter);
+
+            lockEntryCount.Should().Be(0);
+        }
+
+        [TestMethod]
+        public void DynamicThreadSafeProxyInLockWhenInterfaceMemberSpecifiedInLambdaExpression()
+        {
+            var testMock = new Mock<ITest>();
+
+            int? lockEntryCountDuringCallback = null;
+
+            int lockEntryCount = 0;
+
+            testMock.SetupGet(test => test.SomeProperty).Callback(() => lockEntryCountDuringCallback = lockEntryCount);
+
+            Func<object, ILock> lockFactory = obj =>
+            {
+                var lockMock = new Mock<ILock>();
+
+                lockMock.Setup(lck => lck.Enter()).Callback(() => lockEntryCount++);
+                lockMock.Setup(lck => lck.Exit()).Callback(() => lockEntryCount--);
+
+                return lockMock.Object;
+            };
+
+            var proxyBuilder = CreateDynamicThreadSafeProxyBuilder(testMock.Object, typeof(ITest), lockFactory);
+
+            var proxy = proxyBuilder.ForMember(test => (test as ITest).SomeProperty).Build() as ITest;
+
+            var propertyValue = proxy.SomeProperty;
+
+            lockEntryCountDuringCallback.Should().Be(1);
+        }
+
+        [TestMethod]
+        public void DynamicThreadSafeProxyNotInLockWhenInterfaceMemberSpecifiedInExceptForLambdaExpression()
+        {
+            var testMock = new Mock<ITest>();
+
+            int? lockEntryCountDuringCallback = null;
+
+            int lockEntryCount = 0;
+
+            testMock.SetupGet(test => test.SomeProperty).Callback(() => lockEntryCountDuringCallback = lockEntryCount);
+
+            Func<object, ILock> lockFactory = obj =>
+            {
+                var lockMock = new Mock<ILock>();
+
+                lockMock.Setup(lck => lck.Enter()).Callback(() => lockEntryCount++);
+                lockMock.Setup(lck => lck.Exit()).Callback(() => lockEntryCount--);
+
+                return lockMock.Object;
+            };
+
+            var proxyBuilder = CreateDynamicThreadSafeProxyBuilder(testMock.Object, typeof(ITest), lockFactory);
+
+            var proxy = proxyBuilder.Except().ForMember(test => (test as ITest).SomeProperty).Build() as ITest;
+
+            var propertyValue = proxy.SomeProperty;
+
+            lockEntryCountDuringCallback.Should().Be(0);
+        }
+
     }
 }

@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using Sws.Threading.Reflection;
+using Sws.Threading.ThreadSafeProxyFactoryGenerics;
 
 namespace Sws.Threading
 {
@@ -14,14 +15,32 @@ namespace Sws.Threading
 
         private readonly MethodInfoExtractor _methodInfoExtractor;
 
-        internal ForMembersThreadSafeProxyBuilderContextBase(MethodInfoExtractor methodInfoExtractor)
+        private readonly Type _proxyType;
+
+        internal ForMembersThreadSafeProxyBuilderContextBase(MethodInfoExtractor methodInfoExtractor, Type proxyType)
         {
             if (methodInfoExtractor == null)
             {
                 throw new ArgumentNullException("methodInfoExtractor");
             }
 
+            if (proxyType == null)
+            {
+                throw new ArgumentNullException("proxyType");
+            }
+
+            if (!typeof(TProxy).IsAssignableFrom(proxyType))
+            {
+                throw new ArgumentException(ExceptionMessages.TProxyNotAssignableFromProxyType, "proxyType");
+            }
+
             _methodInfoExtractor = methodInfoExtractor;
+            _proxyType = proxyType;
+        }
+
+        public Type ProxyType
+        {
+            get { return _proxyType; }
         }
 
         /// <summary>
@@ -38,7 +57,7 @@ namespace Sws.Threading
                 throw new ArgumentNullException("memberExpression");
             }
 
-            return ForMethods(_methodInfoExtractor.ExtractMethods<TProxy>(memberExpression));
+            return ForMethods(_methodInfoExtractor.ExtractMethods(ProxyType, memberExpression));
         }
 
         /// <summary>
@@ -55,7 +74,7 @@ namespace Sws.Threading
                 throw new ArgumentNullException("memberExpression");
             }
 
-            return ForMethods(_methodInfoExtractor.ExtractSetters<TProxy>(memberExpression));
+            return ForMethods(_methodInfoExtractor.ExtractSetters(ProxyType, memberExpression));
         }
 
         /// <summary>
@@ -72,7 +91,7 @@ namespace Sws.Threading
                 throw new ArgumentNullException("memberExpression");
             }
 
-            return ForMethods(_methodInfoExtractor.ExtractGetters<TProxy>(memberExpression));
+            return ForMethods(_methodInfoExtractor.ExtractGetters(ProxyType, memberExpression));
         }
 
         /// <summary>
@@ -89,7 +108,7 @@ namespace Sws.Threading
                 throw new ArgumentNullException("memberExpression");
             }
 
-            return ForMethods(_methodInfoExtractor.ExtractMethods<TProxy>(memberExpression));
+            return ForMethods(_methodInfoExtractor.ExtractMethods(ProxyType, memberExpression));
         }
 
         /// <summary>
@@ -106,7 +125,7 @@ namespace Sws.Threading
                 throw new ArgumentNullException("memberInfos");
             }
 
-            return ForMethods(_methodInfoExtractor.ExtractMethods<TProxy>(memberInfos));
+            return ForMethods(_methodInfoExtractor.ExtractMethods(ProxyType, memberInfos));
         }
 
         /// <summary>
@@ -123,7 +142,7 @@ namespace Sws.Threading
                 throw new ArgumentNullException("memberSelector");
             }
 
-            return ForMethods(_methodInfoExtractor.ExtractMethods<TProxy>(memberSelector));
+            return ForMethods(_methodInfoExtractor.ExtractMethods(ProxyType, memberSelector));
         }
 
         protected abstract ThreadSafeProxyBuilder<TProxy> ForMethods(IEnumerable<MethodInfo> methodInfos);
@@ -135,8 +154,8 @@ namespace Sws.Threading
 
         private readonly Func<IEnumerable<MethodInfo>, ThreadSafeProxyBuilder<TProxy>> _forMethodApplier;
 
-        internal SingleUseForMembersThreadSafeProxyBuilderContext(MethodInfoExtractor methodInfoExtractor, Func<IEnumerable<MethodInfo>, ThreadSafeProxyBuilder<TProxy>> forMethodApplier)
-            : base(methodInfoExtractor)
+        internal SingleUseForMembersThreadSafeProxyBuilderContext(MethodInfoExtractor methodInfoExtractor, Type proxyType, Func<IEnumerable<MethodInfo>, ThreadSafeProxyBuilder<TProxy>> forMethodApplier)
+            : base(methodInfoExtractor, proxyType)
         {
             if (forMethodApplier == null)
             {
@@ -162,6 +181,8 @@ namespace Sws.Threading
 
         private readonly MethodInfoExtractor _methodInfoExtractor;
 
+        private readonly DynamicThreadSafeProxyFactoryInvoker _dynamicThreadSafeProxyFactoryInvoker;
+
         private IThreadSafeProxyFactory _threadSafeProxyFactory;
 
         private bool _includedMethodInfosSpecified = false;
@@ -174,21 +195,34 @@ namespace Sws.Threading
 
         private object _lockingObject = null;
 
-        public ThreadSafeProxyBuilder(TProxy subject) : this(subject, DependencyResolver.GetThreadSafeProxyBuilderDependencies())
+        public ThreadSafeProxyBuilder(TProxy subject)
+            : this(subject, typeof(TProxy))
         {
         }
 
-        internal ThreadSafeProxyBuilder(TProxy subject, DependencyResolver.ThreadSafeProxyBuilderDependencies dependencies) : base(dependencies.MethodInfoExtractor)
+        public ThreadSafeProxyBuilder(TProxy subject, Type proxyType)
+            : this(subject, proxyType, DependencyResolver.GetThreadSafeProxyBuilderDependencies())
+        {
+        }
+
+        internal ThreadSafeProxyBuilder(TProxy subject, Type proxyType,
+            DependencyResolver.ThreadSafeProxyBuilderDependencies dependencies) : base(dependencies.MethodInfoExtractor, proxyType)
         {
             if (subject == null)
             {
                 throw new ArgumentNullException("subject");
             }
 
-            _subject = subject;
+            if (!proxyType.IsAssignableFrom(subject.GetType()))
+            {
+                throw new ArgumentException(ExceptionMessages.SubjectCannotBeAssignedToProxyType);
+            }
 
+            _subject = subject;
+            
             _threadSafeProxyFactory = dependencies.DefaultThreadSafeProxyFactory;
             _methodInfoExtractor = dependencies.MethodInfoExtractor;
+            _dynamicThreadSafeProxyFactoryInvoker = dependencies.DynamicThreadSafeProxyFactoryInvoker;
             _lockFactory = dependencies.DefaultLockFactory;
         }
 
@@ -295,7 +329,16 @@ namespace Sws.Threading
             var methodInfoIncluder = GenerateMethodInfoPredicate(true, _includedMethodInfosSpecified, _includedMethodInfos);
             var methodInfoExcluder = GenerateMethodInfoPredicate(false, _excludedMethodInfosSpecified, _excludedMethodInfos);
 
-            return _threadSafeProxyFactory.CreateProxy(_subject, methodInfo => methodInfoIncluder(methodInfo) && (!methodInfoExcluder(methodInfo)), _lockFactory(_lockingObject ?? new object()));
+            Predicate<MethodInfo> compositeMethodIncluder = methodInfo => methodInfoIncluder(methodInfo) && (!methodInfoExcluder(methodInfo));
+            var theLock = _lockFactory(_lockingObject ?? new object());
+
+            if (typeof(TProxy) == ProxyType)
+            {
+                return _threadSafeProxyFactory.CreateProxy<TProxy>(_subject, compositeMethodIncluder, theLock);
+            }
+
+            return _dynamicThreadSafeProxyFactoryInvoker.CreateProxy(
+                _threadSafeProxyFactory, _subject, ProxyType, compositeMethodIncluder, theLock) as TProxy;
         }
 
         private Predicate<MethodInfo> GenerateMethodInfoPredicate(bool defaultValue, bool methodInfosSpecified, IEnumerable<MethodInfo> methodInfos)
@@ -341,7 +384,7 @@ namespace Sws.Threading
 
         public SingleUseForMembersThreadSafeProxyBuilderContext<TProxy> Except()
         {
-            return new SingleUseForMembersThreadSafeProxyBuilderContext<TProxy>(_methodInfoExtractor, ExcludeMethods);
+            return new SingleUseForMembersThreadSafeProxyBuilderContext<TProxy>(_methodInfoExtractor, ProxyType, ExcludeMethods);
         }
 
     }

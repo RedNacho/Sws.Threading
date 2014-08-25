@@ -126,4 +126,10 @@
   <data name="ObjectNotSupportedByProxyGeneratorFormat" xml:space="preserve">
     <value>Proxy generator does not support this type of object: {0}</value>
   </data>
+  <data name="SubjectCannotBeAssignedToProxyType" xml:space="preserve">
+    <value>Subject cannot be assigned to proxy type.</value>
+  </data>
+  <data name="TProxyNotAssignableFromProxyType" xml:space="preserve">
+    <value>Proxy type must be assignable to TProxy.</value>
+  </data>
 </root>
