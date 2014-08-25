@@ -120,7 +120,7 @@ namespace Sws.Threading.Reflection
                 t => t.GetMembers(BindingFlags.Public | BindingFlags.Instance), filter);
         }
 
-        public static IEnumerable<MethodInfo> GetMethodInfosForDeclaringType(Type type, Predicate<MemberInfo> filter)
+        private static IEnumerable<MethodInfo> GetMethodInfosForDeclaringType(Type type, Predicate<MemberInfo> filter)
         {
             return GetMemberInfosForDeclaringType<MethodInfo>(type,
                 t => t.GetMethods(BindingFlags.Public | BindingFlags.Instance), filter);
