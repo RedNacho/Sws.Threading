@@ -47,4 +47,4 @@ No method calls - equivalent to calling the obj.ThreadSafeProxy() extension meth
 
 .WithLockFactory(lockFactory) - causes all subsequent calls to Build() to create a lock on the locking object with the supplied lockFactory (ie replacing the "lock" keyword with something else).  You must supply a factory method because the locking object itself may vary, but the method will only be invoked once for each Build() call - one ILock instance will be used across the entire proxy.
 
-.WithThreadSafeProxyFactory(threadSafeProxyFactory) - allows the underlying mechanism for creating thread-safe proxies to be swapped out (not really expected usage, provided for extensibility).  Standard implementation is ThreadSafeProxyFactory using Castle Dynamic Proxy for proxy generation.
+.WithThreadSafeProxyFactory(threadSafeProxyFactory) - allows the underlying mechanism for creating thread-safe proxies to be swapped out (not really expected usage, provided for extensibility).  Standard implementation is ThreadSafeProxyWithLockControllerFactory using Castle Dynamic Proxy for proxy generation.
