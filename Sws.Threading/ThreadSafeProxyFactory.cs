@@ -69,6 +69,6 @@ namespace Sws.Threading
 
             return _proxyGenerator.Generate(obj, interceptor);
         }
-        
+
     }
 }

@@ -53,6 +53,12 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ExceptionMessages.resx</DependentUpon>
     </Compile>
+    <Compile Include="ThreadSafeProxyFactoryGenerics\ReflectionBasedTypedFactoryCallProvider.cs" />
+    <Compile Include="ThreadSafeProxyFactoryGenerics\CachedTypedFactoryCallProvider.cs" />
+    <Compile Include="ThreadSafeProxyFactoryGenerics\DynamicThreadSafeProxyFactoryInvoker.cs" />
+    <Compile Include="ThreadSafeProxyFactoryGenerics\ITypedFactoryCallProvider.cs" />
+    <Compile Include="ThreadSafeProxyFactoryGenerics\TypedFactoryCall.cs" />
+    <Compile Include="ThreadSafeProxyFactoryGenerics\TypedFactoryCall{TProxy}.cs" />
     <Compile Include="ILock.cs" />
     <Compile Include="Interception\ILockController.cs" />
     <Compile Include="Interception\ChainableLockControllerBase.cs" />

@@ -10,50 +10,51 @@ namespace Sws.Threading.Reflection
     internal class MethodInfoExtractor
     {
 
-        public IEnumerable<MethodInfo> ExtractMethods<TDeclaring>(Expression memberExpression)
+        public IEnumerable<MethodInfo> ExtractMethods(Type declaringType, Expression memberExpression)
         {
-            return ExtractMethods<TDeclaring>(ExtractMembers<TDeclaring>(memberExpression).ToArray());
+            return ExtractMethods(declaringType, ExtractMembers(declaringType, memberExpression).ToArray());
         }
 
-        public IEnumerable<MethodInfo> ExtractSetters<TDeclaring>(Expression memberExpression)
+        public IEnumerable<MethodInfo> ExtractSetters(Type declaringType, Expression memberExpression)
         {
-            return ExtractSetters<TDeclaring>(ExtractMembers<TDeclaring>(memberExpression).ToArray());
+            return ExtractSetters(declaringType, ExtractMembers(declaringType, memberExpression).ToArray());
         }
 
-        public IEnumerable<MethodInfo> ExtractGetters<TDeclaring>(Expression memberExpression)
+        public IEnumerable<MethodInfo> ExtractGetters(Type declaringType, Expression memberExpression)
         {
-            return ExtractGetters<TDeclaring>(ExtractMembers<TDeclaring>(memberExpression).ToArray());
+            return ExtractGetters(declaringType, ExtractMembers(declaringType, memberExpression).ToArray());
         }
 
-        public IEnumerable<MethodInfo> ExtractMethods<TDeclaring>(Predicate<MemberInfo> memberSelector)
+        public IEnumerable<MethodInfo> ExtractMethods(Type declaringType, Predicate<MemberInfo> memberSelector)
         {
-            return ExtractMethods<TDeclaring>(
-                typeof(TDeclaring)
+            return ExtractMethods(
+                declaringType,
+                declaringType
                     .GetMembers(BindingFlags.Public | BindingFlags.Instance)
                     .Where(memberInfo => memberSelector(memberInfo))
                 .ToArray());
         }
 
-        private IEnumerable<MethodInfo> ExtractGetters<TDeclaring>(MemberInfo[] memberInfos)
+        private IEnumerable<MethodInfo> ExtractGetters(Type declaringType, MemberInfo[] memberInfos)
         {
-            return FilterMethodsForDeclaringType<TDeclaring>(GetGetters(GetProperties(memberInfos)));
+            return FilterMethodsForDeclaringType(declaringType, GetGetters(GetProperties(memberInfos)));
         }
 
-        private IEnumerable<MethodInfo> ExtractSetters<TDeclaring>(MemberInfo[] memberInfos)
+        private IEnumerable<MethodInfo> ExtractSetters(Type declaringType, MemberInfo[] memberInfos)
         {
-            return FilterMethodsForDeclaringType<TDeclaring>(GetSetters(GetProperties(memberInfos)));
+            return FilterMethodsForDeclaringType(declaringType, GetSetters(GetProperties(memberInfos)));
         }
 
-        public IEnumerable<MethodInfo> ExtractMethods<TDeclaring>(MemberInfo[] memberInfos)
+        public IEnumerable<MethodInfo> ExtractMethods(Type declaringType, MemberInfo[] memberInfos)
         {
-            return FilterMethodsForDeclaringType<TDeclaring>(GetMethods(memberInfos)
+            return FilterMethodsForDeclaringType(declaringType, GetMethods(memberInfos)
                 .Union(GetGettersAndSetters(GetProperties(memberInfos)))
                 .Distinct());
         }
 
-        private IEnumerable<MethodInfo> FilterMethodsForDeclaringType<TDeclaring>(IEnumerable<MethodInfo> methodInfos)
+        private IEnumerable<MethodInfo> FilterMethodsForDeclaringType(Type declaringType, IEnumerable<MethodInfo> methodInfos)
         {
-            return methodInfos.Where(methodInfo => methodInfo.DeclaringType == typeof(TDeclaring));
+            return methodInfos.Where(methodInfo => methodInfo.DeclaringType == declaringType);
         }
 
         private IEnumerable<MethodInfo> GetGettersAndSetters(IEnumerable<PropertyInfo> propertyInfos)
@@ -83,23 +84,35 @@ namespace Sws.Threading.Reflection
             return memberInfos.Select(memberInfo => memberInfo as MethodInfo).Where(methodInfo => methodInfo != null);
         }
 
-        private IEnumerable<MemberInfo> ExtractMembers<TDeclaring>(Expression expression)
+        private IEnumerable<MemberInfo> ExtractMembers(Type declaringType, Expression expression)
         {
-            var visitor = new MemberInfoExpressionVisitor<TDeclaring>();
+            var visitor = new MemberInfoExpressionVisitor(declaringType);
 
             visitor.Visit(expression);
 
             return visitor.MemberInfos;
         }
 
-        private class MemberInfoExpressionVisitor<TDeclaring> : ExpressionVisitor
+        private class MemberInfoExpressionVisitor : ExpressionVisitor
         {
+
+            private readonly Type _declaringType;
+
+            public MemberInfoExpressionVisitor(Type declaringType)
+            {
+                if (declaringType == null)
+                {
+                    throw new ArgumentNullException("declaringType");
+                }
+
+                _declaringType = declaringType;
+            }
 
             private List<MemberInfo> _memberInfos = new List<MemberInfo>();
 
             protected override Expression VisitMember(MemberExpression node)
             {
-                if (node.Member.DeclaringType == typeof(TDeclaring))
+                if (node.Member.DeclaringType == _declaringType)
                 {
                     _memberInfos.Add(node.Member);
                 }
@@ -109,7 +122,7 @@ namespace Sws.Threading.Reflection
 
             protected override Expression VisitMethodCall(MethodCallExpression node)
             {
-                if (node.Method.DeclaringType == typeof(TDeclaring))
+                if (node.Method.DeclaringType == _declaringType)
                 {
                     _memberInfos.Add(node.Method);
                 }
