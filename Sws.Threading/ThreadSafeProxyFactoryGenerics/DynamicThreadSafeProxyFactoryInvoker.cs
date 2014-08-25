@@ -20,18 +20,12 @@ namespace Sws.Threading.ThreadSafeProxyFactoryGenerics
             _typedFactoryCallProvider = typedFactoryCallProvider;
         }
 
-        public TProxy CreateProxy<TProxy>(IThreadSafeProxyFactory threadSafeProxyFactory, TProxy obj, Type proxyType, Predicate<MethodInfo> methodIncluder, ILock theLock)
-            where TProxy : class
+        public object CreateProxy(IThreadSafeProxyFactory threadSafeProxyFactory, object obj, Type proxyType, Predicate<MethodInfo> methodIncluder, ILock theLock)
         {
-            if (!typeof(TProxy).IsAssignableFrom(proxyType))
-            {
-                throw new ArgumentException(ExceptionMessages.TProxyNotAssignableFromProxyType);
-            }
-
             var typedFactoryCall
-                = _typedFactoryCallProvider.GetTypedThreadSafeProxyFactory(proxyType);
+                = _typedFactoryCallProvider.GetTypedFactoryCall(proxyType);
 
-            return typedFactoryCall.Invoke(threadSafeProxyFactory, obj, methodIncluder, theLock) as TProxy;
+            return typedFactoryCall.Invoke(threadSafeProxyFactory, obj, methodIncluder, theLock);
         }
 
     }

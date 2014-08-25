@@ -25,7 +25,7 @@ namespace Sws.Threading.ThreadSafeProxyFactoryGenerics
             _typedFactoryCallProvider = typedFactoryCallProvider;
         }
 
-        public TypedFactoryCall GetTypedThreadSafeProxyFactory(Type proxyType)
+        public TypedFactoryCall GetTypedFactoryCall(Type proxyType)
         {
             TypedFactoryCall typedFactoryCall;
 
@@ -34,7 +34,7 @@ namespace Sws.Threading.ThreadSafeProxyFactoryGenerics
 
                 if (!_cachedTypedFactoryCalls.TryGetValue(proxyType, out typedFactoryCall))
                 {
-                    typedFactoryCall = _typedFactoryCallProvider.GetTypedThreadSafeProxyFactory(proxyType);
+                    typedFactoryCall = _typedFactoryCallProvider.GetTypedFactoryCall(proxyType);
                     _cachedTypedFactoryCalls[proxyType] = typedFactoryCall;
                 }
 
