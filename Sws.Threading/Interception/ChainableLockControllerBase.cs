@@ -24,7 +24,7 @@ namespace Sws.Threading.Interception
             {
                 if (_next == null)
                 {
-                    throw new ArgumentException(ExceptionMessages.LockNotSupportedByLockController);
+                    throw new ArgumentException(ExceptionMessages.LockNotSupportedByLockController, "theLock");
                 }
 
                 _next.Enter(theLock, ref lockTaken);
