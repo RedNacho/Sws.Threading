@@ -15,6 +15,7 @@ namespace Sws.Threading.Interception
         private readonly ILockController _lockController;
         private readonly Predicate<MethodInfo> _methodIncluder;
 
+        [Obsolete("This constructor has been deprecated, please use the overload which accepts an ILockController.")]
         public ThreadSafeInterceptor(ILock theLock, Predicate<MethodInfo> methodIncluder)
             : this(theLock, methodIncluder, new SafeFailingLockController(new UnsafeFailingLockController(null)))
         {

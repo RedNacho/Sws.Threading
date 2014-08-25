@@ -21,6 +21,11 @@ namespace Sws.Threading.Interception
             _lockControllerFactory = lockControllerFactory;
         }
 
+        public Func<ILockController> LockControllerFactory
+        {
+            get { return _lockControllerFactory; }
+        }
+
         public IInterceptor CreateInterceptor(ILock theLock, Predicate<MethodInfo> methodIncluder)
         {
             return new ThreadSafeInterceptor(theLock, methodIncluder, _lockControllerFactory());
