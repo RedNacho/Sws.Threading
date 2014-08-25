@@ -121,7 +121,7 @@
     <value>Lock did not throw Exception, but has not reported successful entry.</value>
   </data>
   <data name="LockNotSupportedByLockController" xml:space="preserve">
-    <value>Unable to control this lock.</value>
+    <value>Controller is unable to control this lock.</value>
   </data>
   <data name="ObjectNotSupportedByProxyGeneratorFormat" xml:space="preserve">
     <value>Proxy generator does not support this type of object: {0}</value>

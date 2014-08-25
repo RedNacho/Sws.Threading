@@ -70,7 +70,7 @@ namespace Sws.Threading {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unable to control this lock..
+        ///   Looks up a localized string similar to Controller is unable to control this lock..
         /// </summary>
         internal static string LockNotSupportedByLockController {
             get {
