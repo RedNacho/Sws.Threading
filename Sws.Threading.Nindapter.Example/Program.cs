@@ -48,8 +48,6 @@ namespace Sws.Threading.Ninject
             ).To<UnsafeContainer>().Named("Safe");
 
             var container = kernel.Get<IContainer>("Safe"); // Swap this for the unsafe one to see the problem.
-
-            var usedVals = new List<int>();
             
             Parallel.Invoke(Enumerable.Range(0, 10).Select(value => (Action)(() => {
 
