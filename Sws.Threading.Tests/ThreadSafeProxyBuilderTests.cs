@@ -116,6 +116,38 @@ namespace Sws.Threading.Tests
         }
 
         [TestMethod]
+        public void ThreadSafeProxyInLockWhenClassMethodCalled()
+        {
+            const int testParameter = 12345;
+
+            var testMock = new Mock<Test>();
+
+            int? lockEntryCountDuringCallback = null;
+
+            int lockEntryCount = 0;
+
+            testMock.Setup(test => test.SomeAction(testParameter)).Callback(() => lockEntryCountDuringCallback = lockEntryCount);
+
+            Func<object, ILock> lockFactory = obj =>
+            {
+                var lockMock = new Mock<ILock>();
+
+                lockMock.Setup(lck => lck.Enter()).Callback(() => lockEntryCount++);
+                lockMock.Setup(lck => lck.Exit()).Callback(() => lockEntryCount--);
+
+                return lockMock.Object;
+            };
+
+            var proxyBuilder = CreateThreadSafeProxyBuilder(testMock.Object, lockFactory);
+
+            var proxy = proxyBuilder.Build();
+
+            proxy.SomeAction(testParameter);
+
+            lockEntryCountDuringCallback.Should().Be(1);
+        }
+
+        [TestMethod]
         public void ThreadSafeProxyUsesSuppliedLockingObjectToBuildLock()
         {
             const int testParameter = 12345;
@@ -1261,5 +1293,53 @@ namespace Sws.Threading.Tests
             lockEntryCountDuringCallback.Should().Be(1);
         }
 
+        public class ProtectedMethodTest
+        {
+            public Action ProtectedMethodAction { get; set; }
+
+            protected virtual void ProtectedMethod()
+            {
+                if (ProtectedMethodAction != null)
+                {
+                    ProtectedMethodAction();
+                }
+            }
+
+            public void CallProtectedMethod()
+            {
+                ProtectedMethod();
+            }
+
+        }
+
+        [TestMethod]
+        public void ThreadSafeProxyInLockWhenProtectedMethodSpecifiedInForMemberAndCalled()
+        {
+            var test = new ProtectedMethodTest();
+
+            int? lockEntryCountDuringCallback = null;
+
+            int lockEntryCount = 0;
+
+            test.ProtectedMethodAction = () => lockEntryCountDuringCallback = lockEntryCount;
+
+            Func<object, ILock> lockFactory = obj =>
+            {
+                var lockMock = new Mock<ILock>();
+
+                lockMock.Setup(lck => lck.Enter()).Callback(() => lockEntryCount++);
+                lockMock.Setup(lck => lck.Exit()).Callback(() => lockEntryCount--);
+
+                return lockMock.Object;
+            };
+
+            var proxyBuilder = CreateThreadSafeProxyBuilder(test, lockFactory);
+
+            var proxy = proxyBuilder.ForMembers(memberInfo => memberInfo.Name == "ProtectedMethod").Build();
+
+            proxy.CallProtectedMethod();
+
+            lockEntryCountDuringCallback.Should().Be(1);
+        }
     }
 }
