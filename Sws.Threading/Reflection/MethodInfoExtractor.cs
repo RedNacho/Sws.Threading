@@ -87,7 +87,7 @@ namespace Sws.Threading.Reflection
 
             visitor.Visit(expression);
 
-            return GetMemberInfosForDeclaringType(declaringType, memberInfo => visitor.MemberInfos.Contains(memberInfo));
+            return GetMemberInfosForDeclaringType(declaringType, memberInfo => visitor.GetVisitedMemberInfos().Contains(memberInfo));
         }
 
         private class MemberInfoExpressionVisitor : ExpressionVisitor
@@ -107,9 +107,9 @@ namespace Sws.Threading.Reflection
                 return base.VisitMethodCall(node);
             }
 
-            public IEnumerable<MemberInfo> MemberInfos
+            public MemberInfo[] GetVisitedMemberInfos()
             {
-                get { return _memberInfos.Distinct(); }
+                return _memberInfos.Distinct().ToArray();
             }
 
         }
@@ -135,7 +135,7 @@ namespace Sws.Threading.Reflection
 
             waiting.Enqueue(type);
 
-            while (waiting.Count() > 0)
+            while (waiting.Any())
             {
                 var nextType = waiting.Dequeue();
 
