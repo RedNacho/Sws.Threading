@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -117,13 +117,13 @@ namespace Sws.Threading.Reflection
         private static IEnumerable<MemberInfo> GetMemberInfosForDeclaringType(Type type, Predicate<MemberInfo> filter)
         {
             return GetMemberInfosForDeclaringType<MemberInfo>(type,
-                t => t.GetMembers(BindingFlags.Public | BindingFlags.Instance), filter);
+                t => t.GetMembers(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance), filter);
         }
 
         private static IEnumerable<MethodInfo> GetMethodInfosForDeclaringType(Type type, Predicate<MemberInfo> filter)
         {
             return GetMemberInfosForDeclaringType<MethodInfo>(type,
-                t => t.GetMethods(BindingFlags.Public | BindingFlags.Instance), filter);
+                t => t.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance), filter);
         }
 
         private static IEnumerable<TMemberInfo> GetMemberInfosForDeclaringType<TMemberInfo>(Type type,
