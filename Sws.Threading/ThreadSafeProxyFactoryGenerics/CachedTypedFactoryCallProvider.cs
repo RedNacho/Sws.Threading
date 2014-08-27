@@ -8,7 +8,7 @@ namespace Sws.Threading.ThreadSafeProxyFactoryGenerics
 
     internal class CachedTypedFactoryCallProvider : ITypedFactoryCallProvider
     {
-        private object _cachedTypedFactoryCallsLockingObject = new object();
+        private readonly object _cachedTypedFactoryCallsLockingObject = new object();
 
         private readonly IDictionary<Type, TypedFactoryCall> _cachedTypedFactoryCalls
             = new Dictionary<Type, TypedFactoryCall>();
