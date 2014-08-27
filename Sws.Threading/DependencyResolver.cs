@@ -64,18 +64,9 @@ namespace Sws.Threading
             );
         }
 
-        private static readonly ProxyGenerator CastleProxyGenerator = new ProxyGenerator();
-
         private static IThreadSafeProxyFactory GetDefaultThreadSafeProxyFactory()
         {
-            return new ThreadSafeProxyFactory(
-                new ThreadSafeInterceptorWithLockControllerFactory(
-                    () => new SafeFailingLockController(new UnsafeFailingLockController(null))
-                ),
-                new CompositeProxyGenerator(
-                    new InterfaceProxyGenerator(CastleProxyGenerator),
-                    new ClassProxyGenerator(CastleProxyGenerator)
-                ));
+            return StandardImplementations.CreateThreadSafeProxyFactory();
         }
 
         private static MethodInfoExtractor GetMethodInfoExtractor()
@@ -93,7 +84,7 @@ namespace Sws.Threading
 
         private static Func<object, ILock> GetDefaultLockFactory()
         {
-            return lockingObject => new SafeFailingMonitorLock(lockingObject);
+            return StandardImplementations.CreateLockFactory();
         }
 
     }

@@ -53,6 +53,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ExceptionMessages.resx</DependentUpon>
     </Compile>
+    <Compile Include="StandardImplementations.cs" />
     <Compile Include="ThreadSafeProxyFactoryGenerics\ReflectionBasedTypedFactoryCallProvider.cs" />
     <Compile Include="ThreadSafeProxyFactoryGenerics\CachedTypedFactoryCallProvider.cs" />
     <Compile Include="ThreadSafeProxyFactoryGenerics\DynamicThreadSafeProxyFactoryInvoker.cs" />

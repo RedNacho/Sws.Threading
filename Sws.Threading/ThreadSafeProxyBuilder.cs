@@ -281,7 +281,7 @@ namespace Sws.Threading
         /// <summary>
         /// Specifies a lock factory to use when creating thread locks.  Current instance can be
         /// retrieved through the LockFactory property, e.g. for decorating.  This overload
-        /// is here to encourage usage of ISafeFailingLocks.
+        /// is here to encourage usage of ISafeFailingLocks where possible.
         /// </summary>
         /// <param name="lockFactory"></param>
         /// <returns></returns>
